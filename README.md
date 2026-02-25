@@ -4,7 +4,7 @@ An AI-enabled peer-to-peer learning framework centered around **EduConnect**, a 
 
 ---
 
-## 
+## What's Inside
 
 | Folder / Item | Description |
 |---------------|-------------|
