@@ -1,0 +1,55 @@
+.personal-chat-container {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.personal-chat-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.personal-chat-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+  min-height: 500px;
+}
+
+.personal-chat-card .chat-header {
+  padding: var(--spacing-lg);
+  border-bottom: 2px solid var(--border);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.08) 100%);
+}
+
+.personal-chat-card .chat-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.personal-chat-card .chat-header p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.personal-chat-container .chat-back-btn,
+.personal-chat-container .chat-messages,
+.personal-chat-container .chat-input-form,
+.personal-chat-container .chat-input,
+.personal-chat-container .chat-send-btn,
+.personal-chat-container .chat-message,
+.personal-chat-container .message-avatar,
+.personal-chat-container .message-body,
+.personal-chat-container .message-sender,
+.personal-chat-container .message-text,
+.personal-chat-container .message-time,
+.personal-chat-container .chat-empty {
+  /* Inherits from GroupChat - reuse same styles */
+}
