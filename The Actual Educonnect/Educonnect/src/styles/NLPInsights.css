@@ -32,7 +32,7 @@
 .nlp-section {
   margin-top: var(--spacing-xl);
   padding-top: var(--spacing-lg);
-  border-top: 2px solid var(--border);
+  border-top: 1px solid var(--border);
 }
 
 .nlp-section h2 {
@@ -69,7 +69,7 @@
 
 .nlp-run-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: var(--radius);
@@ -78,9 +78,13 @@
   transition: all 0.2s;
 }
 
+.nlp-run-btn:hover {
+  background: var(--primary-hover);
+  box-shadow: var(--glow-soft);
+}
+
 .nlp-run-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .nlp-run-btn:disabled {
@@ -89,7 +93,7 @@
 }
 
 .nlp-error {
-  color: #dc3545;
+  color: var(--error);
   font-size: 0.9rem;
   margin-top: var(--spacing-sm);
 }
@@ -97,7 +101,7 @@
 .topics-section {
   margin-top: var(--spacing-xl);
   padding-top: var(--spacing-lg);
-  border-top: 2px solid var(--border);
+  border-top: 1px solid var(--border);
 }
 
 .topics-section h3 {
@@ -141,7 +145,7 @@
   padding: 0.2rem 0.5rem;
   background: var(--primary-light);
   color: var(--primary);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius);
   font-size: 0.75rem;
   font-weight: 600;
 }

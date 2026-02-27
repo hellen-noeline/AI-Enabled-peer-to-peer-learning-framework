@@ -34,7 +34,7 @@
 }
 
 .stat-card {
-  background: var(--surface);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   display: flex;
@@ -50,9 +50,9 @@
 }
 
 .stat-card.clickable:hover {
-  border-color: var(--card-color);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.8);
+  box-shadow: var(--shadow-md), var(--glow-soft);
+  transform: translateY(-4px) scale(1.01);
 }
 
 .stat-link {

@@ -14,34 +14,35 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: var(--primary, #667eea);
+  background: var(--primary);
   color: white;
   border: none;
-  border-radius: 2rem;
+  border-radius: var(--radius);
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(102, 126, 234, 0.45);
-  transition: background 0.2s, transform 0.15s;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
 }
 
 .audio-reader-btn:hover {
-  background: var(--primary-hover, #5a6fd6);
+  background: var(--primary-hover);
   transform: scale(1.03);
+  box-shadow: var(--glow-soft);
 }
 
 .audio-reader-btn:focus {
-  outline: 2px solid white;
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
 .audio-reader-btn.speaking {
-  background: #dc2626;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+  background: var(--error);
+  box-shadow: var(--shadow-sm);
 }
 
 .audio-reader-btn.speaking:hover {
-  background: #b91c1c;
+  filter: brightness(1.1);
 }
 
 .audio-reader-icon {
@@ -61,7 +62,7 @@
 
 .audio-reader-status {
   font-size: 0.75rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary);
   min-height: 1.25rem;
 }
 

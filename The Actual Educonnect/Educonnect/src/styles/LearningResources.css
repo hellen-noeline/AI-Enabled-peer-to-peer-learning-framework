@@ -32,9 +32,11 @@
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-xl);
   padding: var(--spacing-md);
-  background: var(--surface);
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(var(--glass-blur));
 }
 
 .category-btn {
@@ -42,24 +44,26 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--background);
-  border: 2px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text-primary);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .category-btn:hover {
   border-color: var(--primary);
   background: var(--primary-light);
+  box-shadow: var(--glow-soft);
 }
 
 .category-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary);
   color: white;
-  border-color: transparent;
+  border-color: var(--primary);
+  box-shadow: var(--glow-soft);
 }
 
 .category-icon {
@@ -77,18 +81,20 @@
 }
 
 .resource-card {
-  background: var(--surface);
+  background: var(--glass-bg);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
-  border: 2px solid transparent;
+  backdrop-filter: blur(var(--glass-blur));
 }
 
 .resource-card:hover {
   border-color: var(--primary);
+  box-shadow: var(--glow-soft);
 }
 
 .resource-header {
@@ -102,7 +108,7 @@
   background: var(--primary-light);
   color: var(--primary);
   padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -157,7 +163,7 @@
 
 .difficulty-badge {
   padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius);
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
@@ -165,8 +171,8 @@
 
 .duration-badge {
   padding: 0.25rem 0.75rem;
-  background: var(--background);
-  border-radius: var(--radius-full);
+  background: var(--surface);
+  border-radius: var(--radius);
   font-size: 12px;
   color: var(--text-secondary);
   font-weight: 600;
@@ -182,24 +188,25 @@
 .resource-link {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary);
   color: white;
   text-decoration: none;
   border-radius: var(--radius);
   font-weight: 600;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .resource-link:hover {
+  background: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--glow-soft);
 }
 
 .resource-quiz-btn {
   padding: 0.6rem 1.25rem;
-  background: var(--background);
-  border: 2px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   font-weight: 600;
   font-size: 0.9rem;
@@ -211,17 +218,18 @@
 .resource-quiz-btn:hover {
   border-color: var(--primary);
   background: var(--primary-light);
+  box-shadow: var(--glow-soft);
 }
 
 .resource-quiz-btn.quiz-passed {
-  border-color: #10B981;
-  background: rgba(16, 185, 129, 0.1);
-  color: #10B981;
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
 }
 
 .resource-quiz-badge {
   font-size: 12px;
-  color: #10B981;
+  color: var(--success);
   font-weight: 600;
   margin-top: 0.5rem;
   margin-bottom: 0;

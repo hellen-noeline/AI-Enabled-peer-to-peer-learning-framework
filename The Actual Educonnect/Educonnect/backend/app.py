@@ -89,6 +89,149 @@ def health():
     return jsonify({"status": "ok"})
 
 
+# --- AtlasBot NLP: semantic intent matching ---
+# Intent ID -> list of example phrases (variations users might say)
+ATLAS_INTENT_PHRASES = {
+    "hello": [
+        "hi", "hello", "hey", "howdy", "good morning", "good afternoon", "hi there",
+        "greetings", "what's up", "yo", "hiya"
+    ],
+    "thanks": [
+        "thanks", "thank you", "ty", "thx", "appreciate it", "that helped"
+    ],
+    "help": [
+        "help", "what can you do", "how can you help", "what do you do", "i need help",
+        "can you help me", "what are you for", "how does this work", "help me"
+    ],
+    "login": [
+        "log in", "login", "sign in", "how do i log in", "where do i login",
+        "i want to sign in", "access my account", "log me in"
+    ],
+    "signup": [
+        "sign up", "register", "create account", "new account", "how do i sign up",
+        "create an account", "registration"
+    ],
+    "password_reset": [
+        "forgot password", "reset password", "lost my password", "change password",
+        "can't remember password", "password reset"
+    ],
+    "profile": [
+        "profile", "edit profile", "my profile", "update profile", "preferences",
+        "change my details", "where is my profile"
+    ],
+    "find_partners": [
+        "find partners", "study partners", "match me", "recommendations", "find study buddies",
+        "who can i study with", "partner matching", "find someone to study with"
+    ],
+    "study_groups": [
+        "study groups", "join a group", "create a group", "group chat", "study group",
+        "where are the groups", "how do i join a group", "group study"
+    ],
+    "resources": [
+        "learning resources", "courses", "tutorials", "where are resources", "learning materials",
+        "show me courses", "ai courses", "ml courses", "web development courses", "resources",
+        "what can i learn", "external courses", "recommended courses"
+    ],
+    "quizzes": [
+        "quizzes", "quiz", "take a quiz", "practice quiz", "where are quizzes",
+        "how do i take a quiz", "quiz hub", "test myself", "practice test"
+    ],
+    "analytics": [
+        "analytics", "my stats", "study hours", "progress", "how much have i studied",
+        "study statistics", "my progress", "charts", "study time"
+    ],
+    "feedback": [
+        "feedback", "report a bug", "send feedback", "something is wrong", "report issue",
+        "contact support", "complaint", "tell the team", "report problem"
+    ],
+    "issues": [
+        "not working", "broken", "error", "can't log in", "cannot login", "doesn't work",
+        "something went wrong", "it failed", "trouble", "problem", "stuck", "help something is broken"
+    ],
+    "timer": [
+        "study timer", "start timer", "focus session", "study session", "how do i start studying",
+        "log study time", "pomodoro", "timer"
+    ],
+    "navigation_dashboard": [
+        "dashboard", "home", "main page", "go to dashboard", "take me home"
+    ],
+    "navigation_resources": [
+        "open resources", "go to resources", "take me to resources", "resources page"
+    ],
+}
+
+_embedding_model = None
+_intent_embeddings = None  # list of (intent_id, phrase, embedding) or pre-aggregated per intent
+
+
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+    return _embedding_model
+
+
+def get_intent_embeddings():
+    """Build (intent_id, phrase, embedding) list; cache. One embedding per phrase."""
+    global _intent_embeddings
+    if _intent_embeddings is not None:
+        return _intent_embeddings
+    model = get_embedding_model()
+    out = []
+    for intent_id, phrases in ATLAS_INTENT_PHRASES.items():
+        for phrase in phrases:
+            emb = model.encode(phrase, convert_to_numpy=True)
+            out.append((intent_id, phrase, emb))
+    _intent_embeddings = out
+    return _intent_embeddings
+
+
+def cosine_similarity(a, b):
+    import numpy as np
+    a = np.asarray(a, dtype=float).flatten()
+    b = np.asarray(b, dtype=float).flatten()
+    n = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-9)
+    return float(np.clip(n, -1, 1))
+
+
+@app.route("/api/nlp/atlas-intent", methods=["POST"])
+def atlas_intent():
+    """
+    NLP intent for AtlasBot: embed user message, match to intent phrases, return best intent + confidence.
+    Body: { "message": "..." }. Returns { "intent": "...", "confidence": 0.0-1.0 }.
+    """
+    data = request.get_json() or {}
+    message = (data.get("message") or "").strip()
+    if not message:
+        return jsonify({"intent": "help", "confidence": 0.0})
+
+    try:
+        model = get_embedding_model()
+        intent_list = get_intent_embeddings()
+        query_emb = model.encode(message, convert_to_numpy=True)
+
+        best_intent = None
+        best_score = -1.0
+
+        for intent_id, phrase, phrase_emb in intent_list:
+            score = cosine_similarity(query_emb, phrase_emb)
+            if score > best_score:
+                best_score = score
+                best_intent = intent_id
+
+        # Require minimum confidence so random text doesn't match "hello"
+        confidence = float(best_score)
+        if confidence < 0.35:
+            best_intent = "out_of_scope"
+
+        return jsonify({
+            "intent": best_intent,
+            "confidence": round(confidence, 4)
+        })
+    except Exception as e:
+        return jsonify({"intent": "out_of_scope", "confidence": 0.0, "error": str(e)}), 200
+
+
 # --- Auth & Users ---
 init_db()
 

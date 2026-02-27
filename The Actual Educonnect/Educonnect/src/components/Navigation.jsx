@@ -2,11 +2,13 @@ import React from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { useStudy } from '../contexts/StudyContext'
 import '../styles/Navigation.css'
 
 function Navigation() {
   const { user, logout, isAdmin } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const { stopStudySession } = useStudy()
   const location = useLocation()
   const navigate = useNavigate()
@@ -62,6 +64,16 @@ function Navigation() {
             )
           })}
         </div>
+
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          <span className="theme-toggle-icon" aria-hidden>{theme === 'dark' ? '☀️' : '🌙'}</span>
+        </button>
 
         <div className="nav-user">
           <div className="user-info">

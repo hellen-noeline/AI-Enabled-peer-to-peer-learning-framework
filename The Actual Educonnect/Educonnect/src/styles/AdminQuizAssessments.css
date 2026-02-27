@@ -52,7 +52,7 @@
 
 .admin-assessments-filters select {
   padding: 8px 14px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 14px;
   background: var(--surface);

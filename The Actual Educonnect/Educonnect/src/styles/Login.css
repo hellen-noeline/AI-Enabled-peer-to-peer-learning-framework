@@ -4,16 +4,18 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-md);
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent) 100%);
+  background: radial-gradient(circle at top left, #020617 0%, #0B1120 40%, #020617 100%);
 }
 
 .login-card {
-  background: var(--surface);
-  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border-radius: 16px;
   padding: var(--spacing-2xl);
   width: 100%;
   max-width: 440px;
   box-shadow: var(--shadow-lg);
+  border: 1px solid var(--glass-border);
 }
 
 .login-header {
@@ -69,7 +71,7 @@
 .sign-in-as-btn {
   flex: 1;
   padding: 12px 20px;
-  border: 2px solid var(--border);
+  border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: var(--radius);
   font-size: 15px;
   font-weight: 600;
@@ -80,8 +82,9 @@
 }
 
 .sign-in-as-btn:hover {
-  border-color: var(--primary-light);
+  border-color: var(--primary);
   color: var(--text-primary);
+  box-shadow: var(--glow-soft);
 }
 
 .sign-in-as-btn.active {

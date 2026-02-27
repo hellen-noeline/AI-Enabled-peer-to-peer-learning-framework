@@ -5,30 +5,32 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(var(--glass-blur));
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: var(--spacing-lg);
 }
 
 .welcome-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 24px;
-  padding: 48px 40px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
   text-align: center;
-  color: white;
+  color: var(--text-primary);
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(var(--glass-blur));
 }
 
 .welcome-icon {
   width: 80px;
   height: 80px;
-  margin: 0 auto 24px;
-  color: white;
+  margin: 0 auto var(--spacing-lg);
+  color: var(--primary);
 }
 
 .welcome-icon svg {
@@ -45,23 +47,25 @@
 
 .welcome-card p {
   font-size: 16px;
-  opacity: 0.9;
-  margin-bottom: 32px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
   line-height: 1.5;
 }
 
 .welcome-button {
-  background: white;
-  color: #667eea;
+  background: var(--primary);
+  color: white;
   padding: 14px 32px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
 }
 
 .welcome-button:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background: var(--primary-hover);
+  box-shadow: var(--glow-soft);
 }
 

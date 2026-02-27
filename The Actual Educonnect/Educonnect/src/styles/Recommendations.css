@@ -27,14 +27,16 @@
 }
 
 .search-filter-bar {
-  background: var(--surface);
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  backdrop-filter: blur(var(--glass-blur));
 }
 
 .search-box {
@@ -54,7 +56,7 @@
 .search-input {
   width: 100%;
   padding: 14px 16px 14px 48px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 16px;
   background: var(--surface);
@@ -76,25 +78,26 @@
 
 .filter-btn {
   padding: 10px 20px;
-  background: var(--divider);
+  background: var(--surface);
   color: var(--text-secondary);
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+  transition: all 0.25s ease;
+  border: 1px solid var(--border);
 }
 
 .filter-btn:hover {
-  background: var(--border);
+  background: var(--primary-light);
   color: var(--text-primary);
+  border-color: var(--primary);
 }
 
 .filter-btn.active {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  box-shadow: var(--glow-soft);
 }
 
 .results-count {
@@ -116,9 +119,9 @@
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid var(--divider);
+  border: 3px solid var(--border);
   border-top-color: var(--primary);
-  border-radius: var(--radius-full);
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
@@ -131,9 +134,10 @@
 .no-results {
   text-align: center;
   padding: var(--spacing-2xl);
-  background: var(--surface);
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 .no-results-icon {
@@ -159,21 +163,22 @@
 }
 
 .recommendation-card-full {
-  background: var(--surface);
+  background: var(--glass-bg);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  backdrop-filter: blur(var(--glass-blur));
 }
 
 .recommendation-card-full:hover {
   border-color: var(--primary);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glow-soft);
 }
 
 .rec-card-header {
@@ -181,14 +186,14 @@
   align-items: flex-start;
   gap: var(--spacing-md);
   padding-bottom: var(--spacing-md);
-  border-bottom: 2px solid var(--divider);
+  border-bottom: 1px solid var(--border);
 }
 
 .rec-avatar-large {
   width: 80px;
   height: 80px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  border-radius: var(--radius);
+  background: var(--primary);
   color: white;
   display: flex;
   align-items: center;
@@ -273,7 +278,7 @@
 
 .tag {
   padding: 6px 12px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius);
   font-size: 12px;
   font-weight: 600;
   display: inline-block;
@@ -334,7 +339,7 @@
 
 .rec-card-footer {
   padding-top: var(--spacing-md);
-  border-top: 2px solid var(--divider);
+  border-top: 1px solid var(--border);
 }
 
 .view-profile-btn {
@@ -345,12 +350,12 @@
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .view-profile-btn:hover {
   background: var(--primary-hover);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  box-shadow: var(--glow-soft);
 }
 
 @media (max-width: 768px) {
