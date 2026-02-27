@@ -16,7 +16,7 @@ CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
 # Emails that have admin role
 ADMIN_EMAILS = ['admin@educonnect.com']
 
-
+##
 def is_admin_email(email):
     if not email:
         return False
