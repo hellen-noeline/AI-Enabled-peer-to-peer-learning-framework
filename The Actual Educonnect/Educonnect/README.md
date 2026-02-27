@@ -1,40 +1,27 @@
 # EduConnect - Study Partner Platform
 
-A modern React-based platform that helps students find study partners based on similar interests, skills, and preferences. Built with a beautiful Samsung ONE UI 6.0 inspired design.
+A modern React-based platform that helps students find study partners based on similar interests, skills, and preferences. Built with a Samsung ONE UI 6.0 inspired design, with optional Node.js API and Python BERTopic backend.
 
 ## Features
 
-- 🔐 **User Authentication**: Secure sign up and login with local storage
+- 🔐 **User Authentication**: Secure sign up and login (local storage or API when server is running)
 - 🎯 **Smart Recommendation System**: AI-powered matching based on:
   - CS and Data Science Interests (primary factor)
-  - Technical Skills
-  - Soft Skills
-  - Research Interests
-  - Professional Interests
-  - Hobbies
-  - Preferred Learning Style
-  - Study Partner Preferences
-  - Preferred Study Hours
-- 📊 **Interactive Dashboard**: Beautiful visualizations showing:
-  - Total study hours
-  - Weekly study hours (bar chart)
-  - Study progress (pie chart)
-  - Sessions completed
-- 👤 **User Profiles**: Comprehensive profiles with:
-  - Bio and personal information
-  - Skills and interests
-  - Study preferences
-  - Editable profile sections
-- 👥 **Study Partner Discovery**: 
-  - Preview of top 3 recommendations on dashboard
-  - Full recommendations page with search and filtering
-  - Match score indicators
-- 🎨 **Modern UI/UX**: 
-  - Samsung ONE UI 6.0 inspired design
-  - Smooth animations with Framer Motion
-  - Summer color palette
-  - Fully responsive design
-- 🎉 **Welcome Message**: Animated welcome message on login
+  - Technical Skills, Soft Skills, Research/Professional Interests, Hobbies
+  - Preferred Learning Style, Study Partner Preferences, Preferred Study Hours
+- 📊 **Interactive Dashboard**: Visualizations for study hours, weekly progress, sessions completed
+- 👤 **User Profiles**: Bio, skills, interests, study preferences; editable profile sections
+- 👥 **Study Partner Discovery**: Top recommendations on dashboard; full page with search and filtering; match scores
+- 📚 **Learning Resources**: Curated resources by field
+- 📝 **Quiz Hub & Quizzes**: Field-based quizzes for self-assessment
+- 👥 **Study Groups & Chat**: Create/join study groups; group chat and direct (DM) chat
+- 📈 **Study Analytics**: Track and visualize study activity
+- 🤖 **AtlasBot**: In-app AI assistant
+- 🔊 **Audio Reader**: Text-to-speech / accessibility
+- 🎨 **Theme Support**: Light/dark theme (ThemeContext)
+- 📧 **Feedback**: User feedback with optional EmailJS confirmation; admin can respond (server sends to user’s sign-in email)
+- 👑 **Admin**: Admin dashboard, user management, quiz assessments (default admin: `admin@educonnect.com` / `1234`)
+- 🎉 **Welcome Message**: Animated welcome on login
 
 ## Getting Started
 
@@ -54,7 +41,7 @@ npm install
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
+The app will be available at `http://localhost:3000`.
 
 ### Build for Production
 
@@ -64,110 +51,178 @@ npm run build
 
 ### Deploy to GitHub Pages
 
-1. Build the project: `npm run build`
-2. Configure GitHub Pages to serve from the `dist` folder
-3. The dataset CSV file is already in the `public` folder and will be included in the build
+1. Build: `npm run build`
+2. Configure GitHub Pages to serve from the `dist` folder.
+3. CSV datasets in `public/` are included in the build.
 
 ## Project Structure
 
 ```
-src/
-├── components/          # Reusable components
-│   ├── Navigation.jsx
-│   └── WelcomeMessage.jsx
-├── contexts/            # React contexts
-│   └── AuthContext.jsx
-├── pages/               # Page components
-│   ├── Dashboard.jsx
-│   ├── Login.jsx
-│   ├── Profile.jsx
-│   ├── Recommendations.jsx
-│   └── SignUp.jsx
-├── styles/              # CSS files
-│   ├── Dashboard.css
-│   ├── Login.css
-│   ├── Navigation.css
-│   ├── Profile.css
-│   ├── Recommendations.css
-│   ├── SignUp.css
-│   └── WelcomeMessage.css
-├── utils/               # Utility functions
-│   ├── datasetLoader.js
-│   └── recommendationEngine.js
-├── App.jsx
-├── index.css
-└── main.jsx
+Educonnect/
+├── public/                    # Static assets and datasets
+│   ├── ugandan_students_dataset_1050.csv
+│   └── us_students_dataset_1500.csv
+├── scripts/
+│   └── generate_ugandan_students.py   # Regenerate Ugandan dataset
+├── server/                    # Node.js API (auth, users, dataset, feedback, chat, admin)
+│   ├── routes/               # auth, users, dataset, feedback, admin, chat
+│   ├── index.js
+│   ├── db.js
+│   ├── seed.js
+│   └── README.md
+├── backend/                   # Optional Python BERTopic API
+│   ├── app.py
+│   ├── database.py
+│   ├── requirements.txt
+│   └── README.md
+├── src/
+│   ├── api/                  # API clients
+│   │   ├── authApi.js
+│   │   ├── feedbackApi.js
+│   │   └── chatApi.js
+│   ├── components/
+│   │   ├── Navigation.jsx
+│   │   ├── AdminNavigation.jsx
+│   │   ├── WelcomeMessage.jsx
+│   │   ├── AtlasBot.jsx
+│   │   └── AudioReader.jsx
+│   ├── contexts/
+│   │   ├── AuthContext.jsx
+│   │   ├── ThemeContext.jsx
+│   │   ├── StudyContext.jsx
+│   │   └── NLPContext.jsx
+│   ├── data/
+│   │   ├── quizData.js
+│   │   └── learningResources.js
+│   ├── hooks/
+│   │   └── useTextToSpeech.js
+│   ├── pages/
+│   │   ├── Login.jsx
+│   │   ├── SignUp.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── Profile.jsx
+│   │   ├── Recommendations.jsx
+│   │   ├── Feedback.jsx
+│   │   ├── LearningResources.jsx
+│   │   ├── QuizHub.jsx
+│   │   ├── Quiz.jsx
+│   │   ├── StudyGroups.jsx
+│   │   ├── GroupChat.jsx
+│   │   ├── PersonalChat.jsx
+│   │   ├── StudyAnalytics.jsx
+│   │   ├── NLPInsights.jsx
+│   │   ├── AdminDashboard.jsx
+│   │   ├── AdminUsers.jsx
+│   │   └── AdminQuizAssessments.jsx
+│   ├── styles/               # Per-page/component CSS
+│   │   ├── Dashboard.css
+│   │   ├── Login.css
+│   │   ├── SignUp.css
+│   │   ├── Profile.css
+│   │   ├── Recommendations.css
+│   │   ├── Feedback.css
+│   │   ├── LearningResources.css
+│   │   ├── Quiz.css
+│   │   ├── StudyGroups.css
+│   │   ├── GroupChat.css
+│   │   ├── PersonalChat.css
+│   │   ├── StudyAnalytics.css
+│   │   ├── NLPInsights.css
+│   │   ├── Navigation.css
+│   │   ├── WelcomeMessage.css
+│   │   ├── AtlasBot.css
+│   │   ├── AudioReader.css
+│   │   ├── AdminDashboard.css
+│   │   ├── AdminUsers.css
+│   │   └── AdminQuizAssessments.css
+│   ├── utils/
+│   │   ├── datasetLoader.js
+│   │   ├── recommendationEngine.js
+│   │   ├── emailService.js
+│   │   ├── sentimentAnalysis.js
+│   │   ├── nlpBackgroundService.js
+│   │   ├── groupChat.js
+│   │   └── chatResourceRecommender.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── package.json
+└── README.md
 ```
 
 ## Tech Stack
 
-- **React 18** - UI library
-- **Vite** - Build tool and dev server
-- **React Router** - Client-side routing
-- **Framer Motion** - Animation library
-- **Recharts** - Chart library for visualizations
-- **PapaParse** - CSV parsing for dataset
+- **React 18** – UI library
+- **Vite** – Build tool and dev server
+- **React Router** – Client-side routing
+- **Framer Motion** – Animations
+- **Recharts** – Charts
+- **PapaParse** – CSV parsing
+- **@emailjs/browser** – Optional feedback confirmation emails
+- **@xenova/transformers** – Optional client-side NLP
 
 ## Dataset
 
-The platform uses the Ugandan students dataset, combined with registered users for recommendations:
+The platform uses the Ugandan (and US) student datasets, combined with registered users for recommendations:
 
-1. **Ugandan students** (`public/ugandan_students_dataset_1050.csv`) – 1050+ students with:
-   - Ugandan first/last names, universities, cities and districts
-   - Emails, Uganda phone numbers (+256 7XX XXX XXX), gender, date of birth
-   - Credits completed/remaining, course codes, city and state
-   - Computing interests and skills, **strong computing fields**, **weak computing fields**
-   - Technical skills, soft skills, research/professional interests, hobbies
-   - Preferred learning style, partner preferences, preferred study hours
+- **Ugandan students** (`public/ugandan_students_dataset_1050.csv`) – 1050+ students (names, universities, emails, phone, gender, DOB, credits, course codes, computing interests/skills, technical/soft skills, research/professional interests, hobbies, learning style, partner preferences, study hours).
+- **US students** (`public/us_students_dataset_1500.csv`) – optional second dataset.
 
-To regenerate the Ugandan dataset: `python scripts/generate_ugandan_students.py` (from the `Educonnect` folder).
+To regenerate the Ugandan dataset:
 
-## Database (optional)
+```bash
+python scripts/generate_ugandan_students.py
+```
 
-To store **registered users** and **the student dataset** in a database:
+Run from the `Educonnect` folder.
 
-1. From the project root: `cd server && npm install && npm start` — API runs at `http://localhost:5000`.
-2. Populate the database: `cd server && npm run seed` — loads the US and Ugandan CSVs into the DB.
-3. When the API is running, sign up and login save/validate users in SQLite; the app loads the dataset from the API when available.
+## Database & API (optional)
 
-See `server/README.md` for API details.
+To store **registered users** and **the student dataset** and use auth/feedback/chat/admin via API:
+
+1. **Start the server** (from project root):
+   ```bash
+   cd server && npm install && npm start
+   ```
+   API runs at `http://localhost:5000`. Use `VITE_API_URL=http://localhost:5000` if your frontend points to it.
+
+2. **Seed the database**:
+   ```bash
+   cd server && npm run seed
+   ```
+   Loads the CSV(s) into the DB. Registered users are kept.
+
+3. With the server running, sign up and login use the API; the app can load the dataset from the API when available.
+
+See `server/README.md` for API endpoints, default admin, and SMTP for feedback response emails.
 
 ## Recommendation Algorithm
 
-The recommendation system uses a weighted similarity algorithm:
+Weighted similarity (Jaccard for categorical data):
 
-- **CS and Data Science Interests**: 40% weight
-- **Technical Skills**: 15% weight
-- **Soft Skills**: 10% weight
-- **Research Interests**: 10% weight
-- **Professional Interests**: 10% weight
-- **Hobbies**: 5% weight
-- **Preferred Learning Style**: 5% weight
-- **Study Partners Preferences**: 3% weight
-- **Preferred Study Hours**: 2% weight
-
-Similarity is calculated using Jaccard similarity for categorical data.
+- CS and Data Science Interests: 40%
+- Technical Skills: 15%
+- Soft Skills: 10%
+- Research Interests: 10%
+- Professional Interests: 10%
+- Hobbies: 5%
+- Preferred Learning Style: 5%
+- Study Partner Preferences: 3%
+- Preferred Study Hours: 2%
 
 ## Feedback Email (Optional)
 
-When users submit feedback, a confirmation email is sent to their address. To enable this:
+For user feedback confirmation emails:
 
-1. Sign up at [EmailJS](https://www.emailjs.com/)
-2. Add an email service (Gmail, Outlook, etc.) and connect your account
-3. Create an email template with these variables:
-   - `{{to_email}}` – recipient (user's email) – use this in the **To** field
-   - `{{user_name}}` – user's name
-   - `{{subject}}` – feedback subject
-   - `{{message}}` – feedback message
-   - `{{feedback_type}}` – e.g. General Feedback, Bug Report
-4. Copy `.env.example` to `.env` and add your EmailJS Service ID, Template ID, and Public Key
-5. Run `npm install` (includes `@emailjs/browser`)
+1. Sign up at [EmailJS](https://www.emailjs.com/).
+2. Add an email service and create a template with: `{{to_email}}`, `{{user_name}}`, `{{subject}}`, `{{message}}`, `{{feedback_type}}`.
+3. Copy `.env.example` to `.env` and add Service ID, Template ID, and Public Key.
+4. `npm install` (includes `@emailjs/browser`).
 
-Without this setup, feedback is still saved; the confirmation email is simply skipped.
+Without this, feedback is still saved; only the confirmation email is skipped.
 
-**When an admin responds to feedback**, the response is sent to the user's **sign-in email** (the address in their account). The server sends this email; configure SMTP in the server environment (`SMTP_USER`, `SMTP_PASS`; see `server/README.md`).
+**Admin response emails** are sent by the server to the user’s sign-in email. Configure SMTP in the server env (`SMTP_USER`, `SMTP_PASS`; see `server/README.md`).
 
 ## License
 
 This project is open source and available for educational purposes.
-
