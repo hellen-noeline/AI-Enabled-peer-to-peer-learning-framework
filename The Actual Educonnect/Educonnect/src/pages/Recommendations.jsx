@@ -14,6 +14,8 @@ function Recommendations() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all') // all, high, medium, low
+  const [programmeFilter, setProgrammeFilter] = useState('all')
+  const [availableProgrammes, setAvailableProgrammes] = useState([])
 
   useEffect(() => {
     if (!user) {
@@ -26,11 +28,22 @@ function Recommendations() {
       try {
         setLoading(true)
         await loadDataset()
+        const datasetUsers = getDatasetUsers()
         const allUsers = [
-          ...getDatasetUsers(),
+          ...datasetUsers,
           ...JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
         ]
-        
+
+        // Collect unique degree programmes from dataset users (for optional filtering)
+        const programmes = Array.from(
+          new Set(
+            datasetUsers
+              .map(u => u.degreeProgram)
+              .filter(p => p && typeof p === 'string' && p.trim().length > 0)
+          )
+        ).sort()
+        setAvailableProgrammes(programmes)
+
         const recs = getRecommendations(user, allUsers)
         setRecommendations(recs)
       } catch (error) {
@@ -56,14 +69,19 @@ function Recommendations() {
     const matchesSearch = searchQuery === '' || 
       `${rec.firstName} ${rec.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (rec.university && rec.university.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (rec.csInterests && rec.csInterests.toLowerCase().includes(searchQuery.toLowerCase()))
+      (rec.csInterests && rec.csInterests.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (rec.orderedInterests && rec.orderedInterests.toLowerCase().includes(searchQuery.toLowerCase()))
     
     const matchesFilter = filter === 'all' || 
       (filter === 'high' && rec.matchScore >= 70) ||
       (filter === 'medium' && rec.matchScore >= 40 && rec.matchScore < 70) ||
       (filter === 'low' && rec.matchScore < 40)
-    
-    return matchesSearch && matchesFilter
+
+    const matchesProgramme =
+      programmeFilter === 'all' ||
+      (rec.degreeProgram && rec.degreeProgram === programmeFilter)
+
+    return matchesSearch && matchesFilter && matchesProgramme
   })
 
   const getMatchColor = (score) => {
@@ -135,6 +153,18 @@ function Recommendations() {
               Low (40% -)
             </button>
           </div>
+          <div className="programme-filter">
+            <select
+              value={programmeFilter}
+              onChange={(e) => setProgrammeFilter(e.target.value)}
+              className="programme-select"
+            >
+              <option value="all">All programmes</option>
+              {availableProgrammes.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
         </motion.div>
 
         {/* Results Count */}
@@ -202,7 +232,7 @@ function Recommendations() {
                 <div className="rec-card-body">
                   {rec.csInterests && (
                     <div className="rec-section">
-                      <h4>CS Interests</h4>
+                      <h4>Interests</h4>
                       <div className="tags-list">
                         {parseCommaSeparated(rec.csInterests).slice(0, 5).map((interest, i) => (
                           <span key={i} className="tag tag-primary">

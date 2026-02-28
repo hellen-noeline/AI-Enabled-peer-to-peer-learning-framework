@@ -37,6 +37,9 @@ function userRowToObject(row) {
     state: row.state,
     zipCode: row.zip_code,
     university: row.university,
+    degreeProgram: row.degree_program || '',
+    courseArea: row.course_area || '',
+    orderedInterests: row.ordered_interests || '',
     currentGPA: row.current_gpa,
     creditsCompleted: row.credits_completed,
     creditsRemaining: row.credits_remaining,
@@ -87,6 +90,9 @@ function userDataToRow(userData, id, passwordHash) {
     state: userData.state ?? '',
     zip_code: userData.zipCode ?? '',
     university: userData.university ?? '',
+    degree_program: userData.degreeProgram ?? '',
+    course_area: userData.courseArea ?? '',
+    ordered_interests: userData.orderedInterests ?? '',
     current_gpa: userData.currentGPA ?? '',
     credits_completed: userData.creditsCompleted ?? '',
     credits_remaining: userData.creditsRemaining ?? '',
@@ -134,11 +140,12 @@ router.post('/signup', async (req, res) => {
     const row = userDataToRow({ ...userData, createdAt: new Date().toISOString() }, id, passwordHash)
 
     const role = getRoleForEmail(email)
+    const insertRow = { ...row, role }
     req.db.prepare(`
       INSERT INTO users (
         id, email, password_hash, first_name, last_name, phone_number, date_of_birth,
         gender, nationality, country_of_residence, city, state, zip_code, university,
-        current_gpa, credits_completed, credits_remaining, courses_enrolled, course_codes,
+        degree_program, course_area, ordered_interests, current_gpa, credits_completed, credits_remaining, courses_enrolled, course_codes,
         course_units, technical_skills, soft_skills, research_interests, professional_interests,
         hobbies, cs_interests, strong_topics, weak_topics, preferred_learning_style,
         study_partners_preferences, preferred_study_hours, bio, profile_picture, study_stats,
@@ -146,13 +153,13 @@ router.post('/signup', async (req, res) => {
       ) VALUES (
         @id, @email, @password_hash, @first_name, @last_name, @phone_number, @date_of_birth,
         @gender, @nationality, @country_of_residence, @city, @state, @zip_code, @university,
-        @current_gpa, @credits_completed, @credits_remaining, @courses_enrolled, @course_codes,
+        @degree_program, @course_area, @ordered_interests, @current_gpa, @credits_completed, @credits_remaining, @courses_enrolled, @course_codes,
         @course_units, @technical_skills, @soft_skills, @research_interests, @professional_interests,
         @hobbies, @cs_interests, @strong_topics, @weak_topics, @preferred_learning_style,
         @study_partners_preferences, @preferred_study_hours, @bio, @profile_picture, @study_stats,
         @last_week_reset, @created_at, @last_login_time, @role
       )
-    `).run({ ...row, role })
+    `).run(insertRow)
 
     const user = userRowToObject(req.db.prepare('SELECT * FROM users WHERE id = ?').get(id))
     res.status(201).json({ user })

@@ -4,40 +4,44 @@ export function calculateSimilarity(user1, user2) {
   let score = 0
   let maxScore = 0
 
-  // Primary factor: CS and Data Science Interests (weight: 40%)
-  const weightPrimary = 0.4
-  const interests1 = parseCommaSeparated(user1.csInterests || '')
-  const interests2 = parseCommaSeparated(user2.csInterests || '')
+  // Primary factor: interests (ordered + additional) — universal; highest weight (50%)
+  const weightPrimary = 0.5
+  const additional1 = parseCommaSeparated(user1.csInterests || '')
+  const additional2 = parseCommaSeparated(user2.csInterests || '')
+  const ordered1 = parseCommaSeparated(user1.orderedInterests || '')
+  const ordered2 = parseCommaSeparated(user2.orderedInterests || '')
+  const interests1 = [...ordered1, ...additional1] // ordered first (user-ranked)
+  const interests2 = [...ordered2, ...additional2]
   const interestsMatch = calculateJaccardSimilarity(interests1, interests2)
   score += interestsMatch * weightPrimary
   maxScore += weightPrimary
 
-  // Technical Skills (weight: 15%)
-  const weightTech = 0.15
+  // Technical/Skills (weight: 12%)
+  const weightTech = 0.12
   const tech1 = parseCommaSeparated(user1.technicalSkills || '')
   const tech2 = parseCommaSeparated(user2.technicalSkills || '')
   const techMatch = calculateJaccardSimilarity(tech1, tech2)
   score += techMatch * weightTech
   maxScore += weightTech
 
-  // Soft Skills (weight: 10%)
-  const weightSoft = 0.1
+  // Soft Skills (weight: 8%)
+  const weightSoft = 0.08
   const soft1 = parseCommaSeparated(user1.softSkills || '')
   const soft2 = parseCommaSeparated(user2.softSkills || '')
   const softMatch = calculateJaccardSimilarity(soft1, soft2)
   score += softMatch * weightSoft
   maxScore += weightSoft
 
-  // Research Interests (weight: 10%)
-  const weightResearch = 0.1
+  // Research Interests (weight: 8%)
+  const weightResearch = 0.08
   const research1 = parseCommaSeparated(user1.researchInterests || '')
   const research2 = parseCommaSeparated(user2.researchInterests || '')
   const researchMatch = calculateJaccardSimilarity(research1, research2)
   score += researchMatch * weightResearch
   maxScore += weightResearch
 
-  // Professional Interests (weight: 10%)
-  const weightProfessional = 0.1
+  // Professional Interests (weight: 8%)
+  const weightProfessional = 0.08
   const prof1 = parseCommaSeparated(user1.professionalInterests || '')
   const prof2 = parseCommaSeparated(user2.professionalInterests || '')
   const profMatch = calculateJaccardSimilarity(prof1, prof2)
@@ -52,8 +56,8 @@ export function calculateSimilarity(user1, user2) {
   score += hobbiesMatch * weightHobbies
   maxScore += weightHobbies
 
-  // Preferred Learning Style (weight: 5%)
-  const weightLearning = 0.05
+  // Preferred Learning Style (weight: 4%)
+  const weightLearning = 0.04
   if (user1.preferredLearningStyle && user2.preferredLearningStyle) {
     if (user1.preferredLearningStyle === user2.preferredLearningStyle) {
       score += weightLearning

@@ -15,7 +15,7 @@ function GroupChat() {
   const navigate = useNavigate()
   const location = useLocation()
   const [messages, setMessages] = useState([])
-  const recommendedResources = getRecommendedResourcesFromChat(messages, 5)
+  const recommendedResources = getRecommendedResourcesFromChat(messages, 5, user)
   const [newMessage, setNewMessage] = useState('')
   const messagesEndRef = useRef(null)
   const pollRef = useRef(null)

@@ -6,6 +6,8 @@ import adminRoutes from './routes/admin.js'
 import datasetRoutes from './routes/dataset.js'
 import feedbackRoutes from './routes/feedback.js'
 import chatRoutes from './routes/chat.js'
+import signupOptionsRoutes from './routes/signupOptions.js'
+import studyPlanRoutes from './routes/studyPlan.js'
 import { init as initDb, getDb } from './db.js'
 import { ensureAdmin } from './ensureAdmin.js'
 
@@ -25,6 +27,8 @@ app.use('/api/users', userRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/chat', chatRoutes)
+app.use('/api', signupOptionsRoutes)
+app.use('/api', studyPlanRoutes)
 app.use('/api', datasetRoutes)
 
 app.get('/api/health', (req, res) => {

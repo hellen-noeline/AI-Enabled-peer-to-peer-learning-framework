@@ -162,7 +162,17 @@ function Profile() {
             <div>
               <h1>{displayUser.firstName} {displayUser.lastName}</h1>
               <p className="profile-email">{displayUser.email}</p>
-              {displayUser.university && <p className="profile-university">{displayUser.university}</p>}
+              {displayUser.university && (
+                <p className="profile-university">
+                  {displayUser.university}
+                  {displayUser.degreeProgram && (
+                    <>
+                      {' · '}
+                      <span className="profile-degree">{displayUser.degreeProgram}</span>
+                    </>
+                  )}
+                </p>
+              )}
             </div>
             {isOwnProfile && (
               <motion.button
@@ -200,27 +210,29 @@ function Profile() {
             )}
           </motion.section>
 
-          {/* CS and Data Science Interests */}
-          <motion.section
-            className="profile-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h2>CS and Data Science Interests</h2>
-            {isEditing ? (
-              <input
-                type="text"
-                name="csInterests"
-                value={formData.csInterests}
-                onChange={handleChange}
-                placeholder="e.g., AI, Machine Learning, Data Science"
-                className="tags-input"
-              />
-            ) : (
-              renderTags(displayUser.csInterests, 'primary')
-            )}
-          </motion.section>
+          {/* Additional interests — only show when present or when editing */}
+          {(isEditing || (displayUser.csInterests && displayUser.csInterests.trim())) ? (
+            <motion.section
+              className="profile-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h2>Additional interests</h2>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="csInterests"
+                  value={formData.csInterests}
+                  onChange={handleChange}
+                  placeholder="e.g., AI, Contract Law, Marketing"
+                  className="tags-input"
+                />
+              ) : (
+                renderTags(displayUser.csInterests, 'primary')
+              )}
+            </motion.section>
+          ) : null}
 
           {/* Technical Skills */}
           <motion.section

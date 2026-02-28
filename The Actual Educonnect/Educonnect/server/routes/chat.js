@@ -17,7 +17,7 @@ const SYSTEM_MAP = {
     { path: '/dashboard', name: 'Dashboard', description: 'Your home: overview, quick actions, study timer, and suggestions.' },
     { path: '/recommendations', name: 'Find Partners', description: 'Find study partners matched to your interests and goals.' },
     { path: '/groups', name: 'Study Groups', description: 'Browse and join study groups or create your own.' },
-    { path: '/resources', name: 'Learning Resources', description: 'Courses, tutorials, and materials by topic (AI, ML, web, etc.).' },
+    { path: '/resources', name: 'Learning Resources', description: 'Courses and materials by topic: AI, ML, Data Science, Law, Business, web, and more.' },
     { path: '/profile', name: 'Profile', description: 'Edit your profile, interests, and study preferences.' },
     { path: '/feedback', name: 'Feedback', description: 'Send feedback or report issues to the team.' },
     { path: '/analytics', name: 'Study Analytics', description: 'Charts and stats for your study time and quiz progress.' },
@@ -27,7 +27,7 @@ const SYSTEM_MAP = {
     { id: 'timer', name: 'Study Timer', location: 'Dashboard', description: 'Start a focused study session; time is logged to your analytics.' },
     { id: 'partners', name: 'Find Partners', location: 'Find Partners', description: 'Get matched with peers by interests and fields.' },
     { id: 'groups', name: 'Study Groups', location: 'Study Groups', description: 'Join or create groups and use group chat.' },
-    { id: 'resources', name: 'Learning Resources', location: 'Resources', description: 'Filter by category (AI, ML, web, cyber) and open external courses.' },
+    { id: 'resources', name: 'Learning Resources', location: 'Resources', description: 'Filter by category (AI, ML, Law, Business, web, cyber, etc.) and open external courses.' },
     { id: 'quizzes', name: 'Quizzes', location: 'Quiz hub', description: 'Practice with quizzes per field; progress is saved.' },
     { id: 'analytics', name: 'Analytics', location: 'Study Analytics', description: 'View study hours and quiz performance over time.' },
     { id: 'feedback', name: 'Feedback', location: 'Feedback', description: 'Submit feedback or report a problem.' }
@@ -39,7 +39,7 @@ const SYSTEM_MAP = {
     { keywords: ['profile', 'edit profile', 'preferences', 'my profile', 'update profile'], path: '/profile', label: 'Profile' },
     { keywords: ['partner', 'match', 'recommendation', 'study buddy', 'find someone'], path: '/recommendations', label: 'Find Partners' },
     { keywords: ['group', 'study group', 'join group', 'create group', 'group chat'], path: '/groups', label: 'Study Groups' },
-    { keywords: ['resource', 'course', 'learn', 'tutorial', 'materials', 'courses'], path: '/resources', label: 'Resources' },
+    { keywords: ['resource', 'course', 'learn', 'tutorial', 'materials', 'courses', 'law', 'legal', 'business', 'accounting', 'economics'], path: '/resources', label: 'Resources' },
     { keywords: ['quiz', 'test', 'practice', 'quiz hub', 'take a quiz'], path: '/dashboard', label: 'Dashboard (then Quiz hub)' },
     { keywords: ['analytics', 'stats', 'hours', 'progress', 'statistics', 'study time'], path: '/analytics', label: 'Study Analytics' },
     { keywords: ['feedback', 'report', 'bug', 'issue', 'contact', 'complaint'], path: '/feedback', label: 'Feedback' }
@@ -57,7 +57,7 @@ const INTENT_REPLIES = {
     actions: []
   },
   help: {
-    text: "I can help you with:\n\n• **Navigation** – \"Where is X?\" or \"Take me to Resources\"\n• **Features** – \"How do I start a study timer?\" or \"Where are quizzes?\"\n• **Resources** – \"Show me ML courses\" or \"Learning resources\"\n• **Issues** – \"I can't log in\", \"Report a bug\"\n\nTry asking in your own words.",
+    text: "I can help you with:\n\n• **Navigation** – \"Where is X?\" or \"Take me to Resources\"\n• **Features** – \"How do I start a study timer?\" or \"Where are quizzes?\"\n• **Resources** – \"Show me Law courses\", \"Business materials\", \"ML tutorials\", or \"Learning resources\"\n• **Issues** – \"I can't log in\", \"Report a bug\"\n\nI support Computing, Law, Business, and all course areas. Try asking in your own words.",
     actions: SYSTEM_MAP.routes.slice(0, 6).map(r => ({ path: r.path, label: r.name }))
   },
   login: {
@@ -85,7 +85,7 @@ const INTENT_REPLIES = {
     actions: [{ path: '/groups', label: 'Study Groups' }]
   },
   resources: {
-    text: '**Learning Resources** has courses and tutorials by topic (AI, ML, web, etc.). Filter by category and open external links.',
+    text: '**Learning Resources** has courses and materials by topic: AI, ML, Data Science, Law, Business, web, and more. Filter by category and open external links.',
     actions: [{ path: '/resources', label: 'Open Resources' }]
   },
   quizzes: {
@@ -128,7 +128,23 @@ const CATEGORY_KEYWORDS = {
   web: ['web', 'react', 'node', 'frontend', 'backend', 'full stack', 'javascript'],
   cyber: ['cyber', 'security', 'network security', 'owasp', 'ethical hacking'],
   cv: ['computer vision', 'vision', 'opencv', 'image', 'cnn'],
-  mobile: ['mobile', 'android', 'ios', 'swift', 'kotlin', 'flutter', 'app development']
+  mobile: ['mobile', 'android', 'ios', 'swift', 'kotlin', 'flutter', 'app development'],
+  law: ['law', 'legal', 'contract', 'constitutional', 'criminal', 'human rights', 'litigation', 'court', 'jurisdiction', 'commercial law', 'legal writing', 'international law'],
+  business: ['business', 'accounting', 'finance', 'economics', 'marketing', 'hr', 'human resources', 'management', 'entrepreneurship', 'hospitality', 'logistics', 'supply chain', 'microeconomics', 'macroeconomics']
+}
+
+const CATEGORY_LABELS = {
+  ai: 'AI',
+  ml: 'Machine Learning',
+  dl: 'Deep Learning',
+  nlp: 'NLP',
+  ds: 'Data Science',
+  web: 'Web Development',
+  cyber: 'Cybersecurity',
+  cv: 'Computer Vision',
+  mobile: 'Mobile Development',
+  law: 'Law',
+  business: 'Business & Management'
 }
 
 const RECOMMEND_TRIGGERS = ['recommend', 'suggest', 'give me', 'find me', 'want to learn', 'learn about', 'course on', 'tutorial for', 'best course', 'something for', 'what should i', 'content for', 'resource for', 'courses for', 'learning material', 'anything for', 'options for', 'link to', 'direct me to']
@@ -175,7 +191,7 @@ function handleLearningResourceRecommendation(message) {
   const top = pool.slice(0, 5)
 
   const categoryLabel = categories.length === 1
-    ? (categories[0] === 'ai' ? 'AI' : categories[0] === 'ml' ? 'Machine Learning' : categories[0] === 'dl' ? 'Deep Learning' : categories[0] === 'nlp' ? 'NLP' : categories[0] === 'ds' ? 'Data Science' : categories[0] === 'web' ? 'Web Development' : categories[0] === 'cyber' ? 'Cybersecurity' : categories[0] === 'cv' ? 'Computer Vision' : categories[0] === 'mobile' ? 'Mobile' : categories[0])
+    ? (CATEGORY_LABELS[categories[0]] || categories[0])
     : 'your topic'
 
   const lines = top.map((r, i) => `${i + 1}. **${r.title}** (${r.provider}) – ${r.difficulty}, ${r.duration || 'Self-paced'}. ${(r.description || '').slice(0, 80)}…`)
@@ -187,7 +203,7 @@ function handleLearningResourceRecommendation(message) {
 
 // Soft hints: words that suggest a topic even when we didn’t match a full intent (for suggestions when we can’t help exactly).
 const SOFT_HINT_WORDS = [
-  { words: ['course', 'learn', 'tutorial', 'material', 'video', 'class', 'topic', 'ai', 'ml', 'web', 'code'], path: '/resources', label: 'Learning Resources', hint: 'browse courses and tutorials' },
+  { words: ['course', 'learn', 'tutorial', 'material', 'video', 'class', 'topic', 'ai', 'ml', 'web', 'code', 'law', 'legal', 'business', 'accounting', 'economics', 'contract', 'marketing'], path: '/resources', label: 'Learning Resources', hint: 'browse courses and materials (CS, Law, Business)' },
   { words: ['partner', 'buddy', 'match', 'someone', 'study with', 'peer', 'recommend'], path: '/recommendations', label: 'Find Partners', hint: 'find study partners' },
   { words: ['group', 'team', 'chat', 'together', 'join'], path: '/groups', label: 'Study Groups', hint: 'join or create study groups' },
   { words: ['quiz', 'test', 'practice', 'exam', 'question'], path: '/dashboard', label: 'Quizzes', hint: 'take quizzes by topic' },
@@ -213,7 +229,7 @@ function getSoftHintSuggestions(message) {
 
 const SUGGESTION_LINES = {
   '/dashboard': '**Dashboard** – Start a study session, see your overview, or open the Quiz hub.',
-  '/resources': '**Learning Resources** – Browse courses and tutorials by topic (AI, ML, web, etc.).',
+  '/resources': '**Learning Resources** – Browse courses and materials by topic (AI, ML, Law, Business, web, etc.).',
   '/recommendations': '**Find Partners** – Get matched with study partners by interests and goals.',
   '/groups': '**Study Groups** – Join or create a group and use group chat.',
   '/profile': '**Profile** – Edit your profile, interests, and preferences.',
@@ -316,7 +332,7 @@ function handleHelp(message) {
   const t = normalize(message)
   if (!t || t.includes('help') || t.includes('what can you') || t.includes('what do you') || t.includes('how do i') || t.includes('how can i') || t.includes('what are you') || t.includes('capabilities')) {
     return {
-      text: "I can help you with:\n\n• **Navigation** – \"Where is X?\" or \"Take me to Resources\"\n• **Features** – \"How do I start a study timer?\" or \"Where are quizzes?\"\n• **Resources** – \"Show me ML courses\" or \"Learning resources\"\n• **Issues** – \"I can't log in\", \"Report a bug\"\n\nTry asking in your own words.",
+      text: "I can help you with:\n\n• **Navigation** – \"Where is X?\" or \"Take me to Resources\"\n• **Features** – \"How do I start a study timer?\" or \"Where are quizzes?\"\n• **Resources** – \"Show me Law courses\", \"Business materials\", \"ML tutorials\", or \"Learning resources\" (CS, Law, Business, and more)\n• **Issues** – \"I can't log in\", \"Report a bug\"\n\nTry asking in your own words.",
       actions: SYSTEM_MAP.routes.slice(0, 6).map(r => ({ path: r.path, label: r.name }))
     }
   }
@@ -381,17 +397,18 @@ function handleIssues(message) {
 
 function handleResources(message) {
   const t = normalize(message)
-  const categories = ['ai', 'ml', 'dl', 'nlp', 'ds', 'web', 'cyber', 'cv', 'mobile']
+  const categories = ['ai', 'ml', 'dl', 'nlp', 'ds', 'web', 'cyber', 'cv', 'mobile', 'law', 'business']
   const found = categories.filter(c => t.includes(c))
   if (found.length > 0) {
+    const labels = found.map(c => CATEGORY_LABELS[c] || c).join(', ')
     return {
-      text: `You can browse **Learning Resources** and filter by category (e.g. ${found.join(', ')}). Open the Resources page to see courses and tutorials.`,
+      text: `You can browse **Learning Resources** and filter by category (e.g. ${labels}). Open the Resources page to see courses and materials.`,
       actions: [{ path: '/resources', label: 'Open Resources' }]
     }
   }
-  if (t.includes('resource') || t.includes('course') || t.includes('tutorial') || t.includes('learn')) {
+  if (t.includes('resource') || t.includes('course') || t.includes('tutorial') || t.includes('learn') || t.includes('law') || t.includes('legal') || t.includes('business') || t.includes('accounting')) {
     return {
-      text: 'Learning Resources has courses, tutorials, and bootcamps by topic. Filter by AI, ML, web dev, cybersecurity, and more.',
+      text: '**Learning Resources** has courses and materials by topic: AI, ML, Data Science, Law, Business & Management, web dev, cybersecurity, and more. Filter by category and open external links.',
       actions: [{ path: '/resources', label: 'Open Resources' }]
     }
   }

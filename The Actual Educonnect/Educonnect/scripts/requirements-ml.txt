@@ -1,0 +1,4 @@
+# For training the next-topic ML model (train_next_topic_model.py)
+scikit-learn>=1.0.0
+joblib>=1.1.0
+numpy>=1.20.0

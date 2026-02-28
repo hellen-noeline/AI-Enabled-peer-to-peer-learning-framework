@@ -47,6 +47,7 @@ function rowToDatasetStudent(row, index, source) {
     state: row['State'] ?? '',
     zip_code: row['Zip Code'] ?? '',
     university: row['University'] ?? '',
+    degree_program: row['Degree Program'] ?? '',
     current_gpa: row['Current GPA / CGPA'] ?? '',
     credits_completed: row['Credits Completed'] ?? '',
     credits_remaining: row['Credits Remaining'] ?? '',
@@ -88,7 +89,7 @@ async function main() {
     INSERT OR REPLACE INTO dataset_students (
       id, source, registration_number, first_name, middle_name, last_name, gender,
       date_of_birth, nationality, country_of_residence, phone_number, email, home_address,
-      city, state, zip_code, university, current_gpa, credits_completed, credits_remaining,
+      city, state, zip_code, university, degree_program, current_gpa, credits_completed, credits_remaining,
       courses_enrolled, course_codes, course_units, technical_skills, soft_skills,
       research_interests, professional_interests, hobbies, preferred_learning_style,
       study_partners_preferences, preferred_study_hours, cs_interests,
@@ -96,7 +97,7 @@ async function main() {
     ) VALUES (
       @id, @source, @registration_number, @first_name, @middle_name, @last_name, @gender,
       @date_of_birth, @nationality, @country_of_residence, @phone_number, @email, @home_address,
-      @city, @state, @zip_code, @university, @current_gpa, @credits_completed, @credits_remaining,
+      @city, @state, @zip_code, @university, @degree_program, @current_gpa, @credits_completed, @credits_remaining,
       @courses_enrolled, @course_codes, @course_units, @technical_skills, @soft_skills,
       @research_interests, @professional_interests, @hobbies, @preferred_learning_style,
       @study_partners_preferences, @preferred_study_hours, @cs_interests,
@@ -108,8 +109,15 @@ async function main() {
 
   let total = 0
   try {
-    total = seedDataset(db, insertStmt, 'ugandan_students_dataset_1050.csv', 'ug')
-    console.log('Inserted Ugandan dataset:', total)
+    // Prefer extended Ugandan dataset with degree programmes if available
+    try {
+      total = seedDataset(db, insertStmt, 'ugandan_students_dataset_1050_extended.csv', 'ug_ext')
+      console.log('Inserted extended Ugandan dataset:', total)
+    } catch (eExt) {
+      console.warn('Extended Ugandan dataset not found, falling back to base CSV:', eExt.message)
+      total = seedDataset(db, insertStmt, 'ugandan_students_dataset_1050.csv', 'ug')
+      console.log('Inserted Ugandan dataset:', total)
+    }
   } catch (e) {
     console.warn('Ugandan dataset not found or error:', e.message)
   }

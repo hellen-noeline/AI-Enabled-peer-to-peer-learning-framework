@@ -6,6 +6,7 @@ import { useStudy } from '../contexts/StudyContext'
 import { useNLP } from '../contexts/NLPContext'
 import { learningFields } from '../data/quizData'
 import Navigation from '../components/Navigation'
+import { fetchStudyPlan } from '../api/studyPlanApi'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
 import '../styles/Dashboard.css'
 
@@ -15,6 +16,7 @@ function Dashboard() {
   const { topics } = useNLP()
   const navigate = useNavigate()
   const [recommendations, setRecommendations] = useState([])
+  const [studyPlan, setStudyPlan] = useState({ schedule: [], suggestions: [], generatedAt: null })
 
   useEffect(() => {
     if (!user) {
@@ -45,6 +47,11 @@ function Dashboard() {
     if (user) {
       loadRecommendations()
     }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    fetchStudyPlan(user).then(setStudyPlan).catch(() => setStudyPlan({ schedule: [], suggestions: [], generatedAt: null }))
   }, [user])
 
   if (!user) return null
@@ -146,6 +153,17 @@ function Dashboard() {
           <div>
             <h1>Welcome back, {user.firstName}! 👋</h1>
             <p>Here's your study overview</p>
+            {user.university && (
+              <p className="dashboard-programme">
+                {user.university}
+                {user.degreeProgram && (
+                  <>
+                    {' · '}
+                    <span>{user.degreeProgram}</span>
+                  </>
+                )}
+              </p>
+            )}
           </div>
         </motion.div>
 
@@ -176,6 +194,53 @@ function Dashboard() {
             </motion.div>
           ))}
         </div>
+
+        {/* Study Plan – schedule + improvement suggestions (learns from your stats) */}
+        {(studyPlan.schedule?.length > 0 || studyPlan.suggestions?.length > 0) && (
+          <motion.div
+            className="study-plan-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+          >
+            <h2>Your Study Plan</h2>
+            <p className="study-plan-hint">Personalised from your profile and quiz progress; we keep adjusting as you use the app.</p>
+            <div className="study-plan-grid">
+              {studyPlan.schedule?.length > 0 && (
+                <div className="study-plan-card schedule-card">
+                  <h3>This week</h3>
+                  <ul className="study-plan-schedule-list">
+                    {studyPlan.schedule.slice(0, 7).map((day, i) => (
+                      <li key={day.day}>
+                        <span className="schedule-day">{day.day}</span>
+                        <span className="schedule-focus">{day.focus}</span>
+                        {day.suggestedHours > 0 && <span className="schedule-hours">~{day.suggestedHours}h</span>}
+                        {day.alreadyLogged > 0 && <span className="schedule-logged">+{day.alreadyLogged}h logged</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {studyPlan.suggestions?.length > 0 && (
+                <div className="study-plan-card suggestions-card">
+                  <h3>Suggestions</h3>
+                  <ul className="study-plan-suggestions-list">
+                    {studyPlan.suggestions.slice(0, 5).map((s, i) => (
+                      <li key={i} className={`suggestion-type-${s.type || 'info'}`}>
+                        {s.message}
+                        {s.fieldId && (
+                          <button type="button" className="suggestion-action" onClick={() => navigate('/resources')}>
+                            Resources →
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Study session prompt – timer starts only when user taps a resource */}
         {!isTimerRunning && (
@@ -333,7 +398,13 @@ function Dashboard() {
               whileTap={{ scale: 0.98 }}
             >
               <h3>Learning Resources</h3>
-              <p>Explore curated materials for AI, ML, Data Science, and more</p>
+              <p>
+                {user?.courseArea === 'Law'
+                  ? 'Explore curated materials for Law, legal writing, and more'
+                  : user?.courseArea === 'Business & Management'
+                    ? 'Explore curated materials for Business, accounting, and more'
+                    : 'Explore curated materials for AI, ML, Data Science, and more'}
+              </p>
               <span className="quick-access-link">Explore →</span>
             </motion.div>
             <motion.div

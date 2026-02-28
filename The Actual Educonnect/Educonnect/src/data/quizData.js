@@ -359,11 +359,139 @@ export const learningFields = [
       { id: 'f9', question: 'API rate limiting:', options: ['Slows everything', 'Prevents abuse and ensures fair use', 'Only for paid APIs'], correct: 1 },
       { id: 'f10', question: 'CI/CD in web:', options: ['Manual only', 'Automates build and deployment', 'Only testing'], correct: 1 }
     ]}
+  },
+  {
+    id: 'law',
+    name: 'Law',
+    description: 'Contract law, constitutional law, legal writing, and fundamentals',
+    resourceIds: [34, 35, 36, 37],
+    quizzes: [
+      {
+        id: 'law-1',
+        order: 1,
+        title: 'Law Quiz 1: Legal Fundamentals',
+        isFinal: false,
+        questions: [
+          { id: 'q1', question: 'What are the primary sources of law in most common law jurisdictions?', options: ['Only statutes', 'Legislation, case law, and custom', 'International treaties only'], correct: 1 },
+          { id: 'q2', question: 'What is the difference between civil and criminal law?', options: ['No difference', 'Civil deals with disputes between parties; criminal with offences against the state', 'Criminal is only for corporations'], correct: 1 },
+          { id: 'q3', question: 'What does "stare decisis" mean?', options: ['Overrule precedent', 'Stand by decided cases; follow precedent', 'Ignore past rulings'], correct: 1 },
+          { id: 'q4', question: 'Who typically bears the burden of proof in a criminal case?', options: ['The defendant', 'The prosecution', 'The judge'], correct: 1 },
+          { id: 'q5', question: 'What is "jurisdiction"?', options: ['A type of contract', 'The authority of a court to hear and decide a case', 'A legal document'], correct: 1 }
+        ]
+      },
+      {
+        id: 'law-2',
+        order: 2,
+        title: 'Law Quiz 2: Contract & Constitutional Law',
+        isFinal: false,
+        questions: [
+          { id: 'q1', question: 'What are the essential elements of a valid contract?', options: ['Only written agreement', 'Offer, acceptance, consideration, intention to create legal relations', 'Signature only'], correct: 1 },
+          { id: 'q2', question: 'What is "breach of contract"?', options: ['Renewing a contract', 'Failure to perform a contractual obligation', 'Signing a contract'], correct: 1 },
+          { id: 'q3', question: 'Constitutional law primarily concerns:', options: ['Private disputes only', 'The structure of government and fundamental rights', 'Commercial transactions'], correct: 1 },
+          { id: 'q4', question: 'What is judicial review?', options: ['Review of lower court judges', 'Power of courts to examine whether laws or actions comply with the constitution', 'Criminal appeal only'], correct: 1 },
+          { id: 'q5', question: 'Remedies for breach of contract can include:', options: ['Only imprisonment', 'Damages, specific performance, or rescission', 'Only fines'], correct: 1 }
+        ]
+      },
+      {
+        id: 'law-3',
+        order: 3,
+        title: 'Law Quiz 3: Legal Writing & International Law',
+        isFinal: false,
+        questions: [
+          { id: 'q1', question: 'Legal writing should be:', options: ['Vague and lengthy', 'Clear, precise, and well-structured', 'Informal'], correct: 1 },
+          { id: 'q2', question: 'What is citation in legal writing?', options: ['A summons to court', 'Referencing primary and secondary sources', 'Closing argument'], correct: 1 },
+          { id: 'q3', question: 'International law governs:', options: ['Only domestic disputes', 'Relations between states and international organisations', 'Only trade'], correct: 1 },
+          { id: 'q4', question: 'Human rights law typically protects:', options: ['Only property rights', 'Civil, political, economic, and social rights', 'Only states'], correct: 1 },
+          { id: 'q5', question: 'Criminal law "actus reus" refers to:', options: ['The mental element', 'The guilty act or conduct', 'The defence'], correct: 1 }
+        ]
+      }
+    ],
+    finalTest: {
+      id: 'law-final',
+      title: 'Law Final Assessment',
+      isFinal: true,
+      questions: [
+        { id: 'f1', question: 'Common law is characterised by:', options: ['No precedent', 'Judge-made law and precedent', 'Only legislation'], correct: 1 },
+        { id: 'f2', question: 'Consideration in contract must:', options: ['Be excessive', 'Have some value and move from the promisee', 'Be in writing only'], correct: 1 },
+        { id: 'f3', question: 'A constitution typically:', options: ['Only sets tax rates', 'Establishes government structure and fundamental rights', 'Replaces all other law'], correct: 1 },
+        { id: 'f4', question: 'Damages in contract aim to:', options: ['Punish the defendant', 'Compensate the injured party', 'Reward the court'], correct: 1 },
+        { id: 'f5', question: 'Mens rea in criminal law refers to:', options: ['The act only', 'The guilty mind or intention', 'The victim'], correct: 1 },
+        { id: 'f6', question: 'Legal research involves:', options: ['Only reading one case', 'Finding and analysing primary and secondary sources', 'Ignoring precedent'], correct: 1 },
+        { id: 'f7', question: 'International treaties:', options: ['Bind only non-signatories', 'Create obligations for states that ratify them', 'Have no legal effect'], correct: 1 },
+        { id: 'f8', question: 'Specific performance is:', options: ['A type of damages', 'An order to perform the contract', 'A criminal sentence'], correct: 1 },
+        { id: 'f9', question: 'Human rights instruments include:', options: ['Only national laws', 'Universal Declaration, regional conventions, and domestic bills of rights', 'Only trade agreements'], correct: 1 },
+        { id: 'f10', question: 'Precedent is important because:', options: ['It is optional', 'It promotes consistency and predictability in the law', 'It applies only to criminal law'], correct: 1 }
+      ]
+    }
+  },
+  {
+    id: 'business',
+    name: 'Business & Management',
+    description: 'Accounting, economics, marketing, HR, and management fundamentals',
+    resourceIds: [42, 43, 44, 45, 46],
+    quizzes: [
+      {
+        id: 'business-1',
+        order: 1,
+        title: 'Business Quiz 1: Management & Organisation',
+        isFinal: false,
+        questions: [
+          { id: 'q1', question: 'What are the four main functions of management?', options: ['Only planning', 'Planning, organising, leading, controlling', 'Only controlling'], correct: 1 },
+          { id: 'q2', question: 'SWOT analysis stands for:', options: ['Single Way Of Thinking', 'Strengths, Weaknesses, Opportunities, Threats', 'Sales Without Output'], correct: 1 },
+          { id: 'q3', question: 'A mission statement typically describes:', options: ['Only profit targets', "The organisation's purpose and what it does", 'Only the product'], correct: 1 },
+          { id: 'q4', question: 'What is organisational structure?', options: ['Only the building', 'How tasks, roles, and reporting lines are arranged', 'Only HR policy'], correct: 1 },
+          { id: 'q5', question: 'Leadership differs from management in that leadership often emphasises:', options: ['Only budgets', 'Vision, change, and inspiring people', 'Only scheduling'], correct: 1 }
+        ]
+      },
+      {
+        id: 'business-2',
+        order: 2,
+        title: 'Business Quiz 2: Accounting & Economics',
+        isFinal: false,
+        questions: [
+          { id: 'q1', question: 'The balance sheet shows:', options: ['Only income', 'Assets, liabilities, and equity at a point in time', 'Only cash flow'], correct: 1 },
+          { id: 'q2', question: 'What is the accounting equation?', options: ['Profit = Revenue - Cost', 'Assets = Liabilities + Equity', 'Sales = Price × Quantity'], correct: 1 },
+          { id: 'q3', question: 'Microeconomics studies:', options: ['Only national GDP', 'Individual consumers, firms, and markets', 'Only international trade'], correct: 1 },
+          { id: 'q4', question: 'Supply and demand determine:', options: ['Only quantity', 'Equilibrium price and quantity in a market', 'Only quality'], correct: 1 },
+          { id: 'q5', question: 'Revenue minus cost of goods sold equals:', options: ['Net profit', 'Gross profit', 'Total assets'], correct: 1 }
+        ]
+      },
+      {
+        id: 'business-3',
+        order: 3,
+        title: 'Business Quiz 3: Marketing, HR & Ethics',
+        isFinal: false,
+        questions: [
+          { id: 'q1', question: 'The marketing mix (4 Ps) includes:', options: ['Only product', 'Product, Price, Place, Promotion', 'Only promotion'], correct: 1 },
+          { id: 'q2', question: 'HRM (Human Resource Management) is responsible for:', options: ['Only payroll', 'Recruitment, training, performance, and compensation', 'Only legal compliance'], correct: 1 },
+          { id: 'q3', question: 'Market segmentation means:', options: ['Selling one product to everyone', 'Dividing the market into distinct groups with similar needs', 'Ignoring customers'], correct: 1 },
+          { id: 'q4', question: 'Business ethics refers to:', options: ['Only profit', 'Moral principles and standards in business conduct', 'Only law'], correct: 1 },
+          { id: 'q5', question: 'Stakeholders in a business can include:', options: ['Only shareholders', 'Shareholders, employees, customers, community, suppliers', 'Only managers'], correct: 1 }
+        ]
+      }
+    ],
+    finalTest: {
+      id: 'business-final',
+      title: 'Business & Management Final Assessment',
+      isFinal: true,
+      questions: [
+        { id: 'f1', question: 'Strategic planning involves:', options: ['Only daily tasks', 'Setting long-term goals and deciding how to achieve them', 'Only budgeting'], correct: 1 },
+        { id: 'f2', question: 'Cash flow statement shows:', options: ['Only profit', 'Cash inflows and outflows over a period', 'Only assets'], correct: 1 },
+        { id: 'f3', question: 'Macroeconomics deals with:', options: ['Only one firm', 'Economy-wide issues: GDP, inflation, unemployment', 'Only prices'], correct: 1 },
+        { id: 'f4', question: 'Competitive advantage can come from:', options: ['Only luck', 'Cost, differentiation, or focus', 'Only size'], correct: 1 },
+        { id: 'f5', question: 'Performance appraisal is used to:', options: ['Only punish', 'Evaluate and develop employee performance', 'Only set pay'], correct: 1 },
+        { id: 'f6', question: 'The product life cycle stages include:', options: ['Only launch', 'Introduction, growth, maturity, decline', 'Only growth'], correct: 1 },
+        { id: 'f7', question: 'Corporate social responsibility (CSR) refers to:', options: ['Only profit', 'Business accountability to society and environment', 'Only shareholders'], correct: 1 },
+        { id: 'f8', question: 'Break-even point is when:', options: ['Profit is maximum', 'Total revenue equals total costs', 'Sales are zero'], correct: 1 },
+        { id: 'f9', question: 'Motivation theories (e.g. Maslow) help managers:', options: ['Ignore employees', 'Understand and improve employee motivation', 'Only set targets'], correct: 1 },
+        { id: 'f10', question: 'A business plan typically includes:', options: ['Only financials', 'Executive summary, market analysis, strategy, and financial projections', 'Only mission'], correct: 1 }
+      ]
+    }
   }
 ]
 
 // Map resource category to field for resources not in resourceIds
-export const categoryToField = { ai: 'ai', ml: 'ml', ds: 'ds', nlp: 'nlp', cv: 'cv', cyber: 'cyber', web: 'web', dl: 'ml', mobile: 'web' }
+export const categoryToField = { ai: 'ai', ml: 'ml', ds: 'ds', nlp: 'nlp', cv: 'cv', cyber: 'cyber', web: 'web', dl: 'ml', mobile: 'web', law: 'law', business: 'business' }
 
 // Map resourceId -> field object for quick lookup
 export const resourceToField = {}

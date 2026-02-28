@@ -1,0 +1,102 @@
+[
+  {
+    "university": "Makerere University",
+    "universityLocation": "Kampala, Uganda",
+    "universityMotto": "We Build for the Future",
+    "college": "College of Computing and Information Sciences",
+    "course": "Bachelor of Information Technology",
+    "duration": "3 years",
+    "curriculum": [
+      {
+        "year": 1,
+        "semester": 1,
+        "units": [
+          { "code": "BIT 1101", "name": "Introduction to IT", "type": "Core", "credits": 4 },
+          { "code": "BIT 1102", "name": "Programming Principles", "type": "Core", "credits": 4 },
+          { "code": "CSK 1101", "name": "Communication Skills", "type": "Core", "credits": 4 },
+          { "code": "MTH 1101", "name": "Calculus I", "type": "Core", "credits": 4 }
+        ]
+      },
+      {
+        "year": 1,
+        "semester": 2,
+        "units": [
+          { "code": "CSC 1200", "name": "Operating Systems", "type": "Core", "credits": 4 },
+          { "code": "CSC 1207", "name": "Data Structures", "type": "Core", "credits": 4 }
+        ]
+      },
+      {
+        "year": 2,
+        "semester": 1,
+        "units": [
+          { "code": "BIT 2101", "name": "Database Systems", "type": "Core", "credits": 4 },
+          { "code": "BIT 2103", "name": "Computer Networks", "type": "Core", "credits": 4 }
+        ]
+      }
+    ]
+  },
+  {
+    "university": "Makerere University",
+    "universityLocation": "Kampala, Uganda",
+    "universityMotto": "We Build for the Future",
+    "college": "College of Business and Management Sciences",
+    "course": "Bachelor of Business Administration",
+    "duration": "3 years",
+    "curriculum": [
+      {
+        "year": 1,
+        "semester": 1,
+        "units": [
+          { "code": "COE 1101", "name": "Fundamentals of Accounting", "type": "Core", "credits": 4 },
+          { "code": "COX 1108", "name": "Intro to Business Administration", "type": "Core", "credits": 3 },
+          { "code": "ECO 1107", "name": "Introductory Microeconomics", "type": "Core", "credits": 3 }
+        ]
+      },
+      {
+        "year": 2,
+        "semester": 1,
+        "units": [
+          { "code": "COE 2101", "name": "Managerial Finance", "type": "Core", "credits": 4 },
+          { "code": "BHR 2101", "name": "Human Resource Management", "type": "Core", "credits": 3 }
+        ]
+      }
+    ]
+  },
+  {
+    "university": "Uganda Christian University",
+    "universityLocation": "Mukono, Uganda",
+    "universityMotto": "In the Beginning was the Word",
+    "college": "Faculty of Engineering & Technology",
+    "course": "Bachelor of Science in Computer Science",
+    "duration": "3 years",
+    "curriculum": [
+      {
+        "year": 1,
+        "semester": 1,
+        "units": [
+          { "code": "CSC 1101", "name": "Introduction to Programming", "type": "Core", "credits": 4 },
+          { "code": "MTH 1101", "name": "Calculus I", "type": "Core", "credits": 4 }
+        ]
+      }
+    ]
+  },
+  {
+    "university": "Uganda Christian University",
+    "universityLocation": "Mukono, Uganda",
+    "universityMotto": "In the Beginning was the Word",
+    "college": "Faculty of Law",
+    "course": "Bachelor of Laws",
+    "duration": "4 years",
+    "curriculum": [
+      {
+        "year": 1,
+        "semester": 1,
+        "units": [
+          { "code": "LLB 1101", "name": "Introducing Law", "type": "Core", "credits": 5 },
+          { "code": "LLB 1103", "name": "Criminal Law I", "type": "Core", "credits": 5 },
+          { "code": "LLB 1105", "name": "Constitutional Law I", "type": "Core", "credits": 5 }
+        ]
+      }
+    ]
+  }
+]

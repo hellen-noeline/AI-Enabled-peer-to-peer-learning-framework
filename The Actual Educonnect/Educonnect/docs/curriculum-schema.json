@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "University curriculum entry (single program)",
+  "description": "One program per object; use an array of these for full dataset. Relationship: University -> College -> Course -> Year -> Semester -> Unit",
+  "type": "object",
+  "required": ["university", "college", "course", "curriculum"],
+  "properties": {
+    "university": { "type": "string", "description": "University name e.g. Makerere University" },
+    "universityLocation": { "type": "string", "description": "e.g. Kampala, Uganda" },
+    "universityMotto": { "type": "string", "description": "Optional motto" },
+    "college": { "type": "string", "description": "Faculty/College name" },
+    "course": { "type": "string", "description": "Full degree name e.g. Bachelor of Information Technology" },
+    "duration": { "type": "string", "description": "e.g. 3 years" },
+    "curriculum": {
+      "type": "array",
+      "description": "Ordered by year and semester",
+      "items": {
+        "type": "object",
+        "required": ["year", "semester", "units"],
+        "properties": {
+          "year": { "type": "integer", "minimum": 1, "description": "Academic year (1, 2, 3...)" },
+          "semester": { "type": "integer", "minimum": 1, "maximum": 2, "description": "1 or 2 (Semester I or II)" },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "code": { "type": "string", "description": "e.g. BIT 1101" },
+                "name": { "type": "string", "description": "Unit/module name" },
+                "type": { "type": "string", "description": "e.g. Core, Elective" },
+                "credits": { "type": "number", "description": "Credit units (CU)" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

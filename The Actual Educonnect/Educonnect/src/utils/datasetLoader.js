@@ -20,6 +20,7 @@ function rowToUser(row, index) {
     state: row['State'],
     zipCode: row['Zip Code'],
     university: row['University'],
+    degreeProgram: row['Degree Program'] || '',
     currentGPA: row['Current GPA / CGPA'],
     creditsCompleted: row['Credits Completed'],
     creditsRemaining: row['Credits Remaining'],
@@ -82,7 +83,12 @@ export async function loadDataset() {
 
     // Fallback: load Ugandan students CSV when API is unavailable
     try {
-      const response = await fetch('/ugandan_students_dataset_1050.csv')
+      // Prefer extended Ugandan dataset with degree programmes if available
+      let response = await fetch('/ugandan_students_dataset_1050_extended.csv')
+      if (!response.ok) {
+        // Fallback to base CSV if extended file is missing
+        response = await fetch('/ugandan_students_dataset_1050.csv')
+      }
       if (!response.ok) throw new Error(response.statusText)
       const text = await response.text()
       const rows = await parseCSV(text)

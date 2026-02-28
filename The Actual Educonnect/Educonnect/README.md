@@ -6,7 +6,7 @@ A modern React-based platform that helps students find study partners based on s
 
 - 🔐 **User Authentication**: Secure sign up and login (local storage or API when server is running)
 - 🎯 **Smart Recommendation System**: AI-powered matching based on:
-  - CS and Data Science Interests (primary factor)
+  - Interests (ordered + additional, any field; primary factor)
   - Technical Skills, Soft Skills, Research/Professional Interests, Hobbies
   - Preferred Learning Style, Study Partner Preferences, Preferred Study Hours
 - 📊 **Interactive Dashboard**: Visualizations for study hours, weekly progress, sessions completed
@@ -16,7 +16,8 @@ A modern React-based platform that helps students find study partners based on s
 - 📝 **Quiz Hub & Quizzes**: Field-based quizzes for self-assessment
 - 👥 **Study Groups & Chat**: Create/join study groups; group chat and direct (DM) chat
 - 📈 **Study Analytics**: Track and visualize study activity
-- 🤖 **AtlasBot**: In-app AI assistant
+- 🧠 **ML next-topic recommender**: Trained model suggests which field to study next (see [docs/ML_MODEL.md](docs/ML_MODEL.md)); run `python scripts/train_next_topic_model.py` to train/update
+- 🤖 **EduBot**: In-app AI assistant
 - 🔊 **Audio Reader**: Text-to-speech / accessibility
 - 🎨 **Theme Support**: Light/dark theme (ThemeContext)
 - 📧 **Feedback**: User feedback with optional EmailJS confirmation; admin can respond (server sends to user’s sign-in email)
@@ -54,6 +55,18 @@ npm run build
 1. Build: `npm run build`
 2. Configure GitHub Pages to serve from the `dist` folder.
 3. CSV datasets in `public/` are included in the build.
+
+### Training the ML next-topic model
+
+To train or update the model that suggests which field to study next (shown on the Dashboard study plan):
+
+```bash
+cd Educonnect
+pip install -r scripts/requirements-ml.txt
+python scripts/train_next_topic_model.py
+```
+
+Ensure the server has been run at least once so `server/educonnect.db` exists and (optionally) has some users. The script writes `server/model_export.json`; the Node server uses it for inference. See [docs/ML_MODEL.md](docs/ML_MODEL.md) for details.
 
 ## Project Structure
 
@@ -176,6 +189,14 @@ python scripts/generate_ugandan_students.py
 
 Run from the `Educonnect` folder.
 
+### University curriculum (MAK & UCU)
+
+For **reactive** filtering by university, faculty, and course (and for progress-by-semester), the app uses a structured curriculum dataset built by scraping Makerere and UCU:
+
+- **Dataset:** `public/university_curriculum.json` — scraped data: full curriculum for MAK BIT, BBA, and LLB; UCU catalog placeholders (Business, Engineering, Law). Structure: University → College → Course → Year → Semester → Unit.
+- **Schema:** `docs/curriculum-schema.json` — JSON schema for validating or merging more data.
+- **Scraping guide:** `docs/UNIVERSITY_CURRICULUM_SCRAPING.md` — two-step strategy, Casa AI prompts, target URLs, and how to add more programs or UCU units.
+
 ## Database & API (optional)
 
 To store **registered users** and **the student dataset** and use auth/feedback/chat/admin via API:
@@ -200,7 +221,7 @@ See `server/README.md` for API endpoints, default admin, and SMTP for feedback r
 
 Weighted similarity (Jaccard for categorical data):
 
-- CS and Data Science Interests: 40%
+- Interests (ordered + additional): 50%
 - Technical Skills: 15%
 - Soft Skills: 10%
 - Research Interests: 10%

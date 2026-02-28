@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
@@ -21,6 +21,27 @@ function LearningResources() {
   const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState('all')
 
+  const interestToCategory = {
+    Law: 'law', 'Business & Management': 'business',
+    'Contract Law': 'law', 'Constitutional Law': 'law', 'Criminal Law': 'law',
+    'International Law': 'law', 'Legal Writing': 'law', 'Human Rights': 'law', 'Commercial Law': 'law',
+    'Accounting & Finance': 'business', 'Economics': 'business', 'Marketing': 'business',
+    'Human Resources': 'business', 'Entrepreneurship': 'business', 'Supply Chain & Logistics': 'business', 'Hospitality & Tourism': 'business'
+  }
+  useEffect(() => {
+    const area = (user?.courseArea || '').trim()
+    const ordered = (user?.orderedInterests || '').split(',').map(s => s.trim()).filter(Boolean)
+    const firstInterest = ordered[0] || ''
+    const firstCat = interestToCategory[firstInterest]
+    if (area === 'Law' || firstInterest === 'Law' || firstCat === 'law') {
+      setSelectedCategory('law')
+    } else if (area === 'Business & Management' || firstInterest === 'Business & Management' || firstCat === 'business') {
+      setSelectedCategory('business')
+    } else if (area === 'Computing & IT' || area === 'Other') {
+      setSelectedCategory('all')
+    }
+  }, [user?.courseArea, user?.orderedInterests])
+
   const categories = [
     { id: 'all', name: 'All Resources' },
     { id: 'ai', name: 'Artificial Intelligence' },
@@ -31,12 +52,39 @@ function LearningResources() {
     { id: 'dl', name: 'Deep Learning' },
     { id: 'cyber', name: 'Cybersecurity' },
     { id: 'web', name: 'Web Development' },
-    { id: 'mobile', name: 'Mobile Development' }
+    { id: 'mobile', name: 'Mobile Development' },
+    { id: 'law', name: 'Law' },
+    { id: 'business', name: 'Business & Management' }
   ]
 
-  const filteredResources = selectedCategory === 'all' 
-    ? learningResources 
+  const filteredResourcesRaw = selectedCategory === 'all'
+    ? learningResources
     : learningResources.filter(resource => resource.category === selectedCategory)
+
+  const orderedInterestList = (user?.orderedInterests || '')
+    .split(',').map(s => s.trim()).filter(Boolean)
+  const getCategoryRank = (category) => {
+    const nameMap = {
+      'Artificial Intelligence': 'ai', 'Machine Learning': 'ml', 'Data Science': 'ds',
+      'Natural Language Processing': 'nlp', 'Computer Vision': 'cv', 'Deep Learning': 'dl',
+      'Cybersecurity': 'cyber', 'Web Development': 'web', 'Mobile Development': 'mobile',
+      'Law': 'law', 'Business & Management': 'business',
+      'Contract Law': 'law', 'Constitutional Law': 'law', 'Criminal Law': 'law',
+      'International Law': 'law', 'Legal Writing': 'law', 'Human Rights': 'law', 'Commercial Law': 'law',
+      'Accounting & Finance': 'business', 'Economics': 'business', 'Marketing': 'business',
+      'Human Resources': 'business', 'Entrepreneurship': 'business', 'Supply Chain & Logistics': 'business', 'Hospitality & Tourism': 'business'
+    }
+    for (let i = 0; i < orderedInterestList.length; i++) {
+      const catId = nameMap[orderedInterestList[i]]
+      if (catId === category) return i
+    }
+    return orderedInterestList.length
+  }
+  const filteredResources = [...filteredResourcesRaw].sort((a, b) => {
+    const rankA = getCategoryRank(a.category)
+    const rankB = getCategoryRank(b.category)
+    return rankA - rankB
+  })
 
   const getDifficultyColor = (difficulty) => {
     switch(difficulty.toLowerCase()) {
@@ -132,12 +180,14 @@ function LearningResources() {
                 >
                   View Resource →
                 </a>
-                <button
-                  className={`resource-quiz-btn ${proficiency ? 'quiz-passed' : ''}`}
-                  onClick={() => field && navigate(`/quiz/${field.id}`)}
-                >
-                  {proficiency ? `✓ ${proficiency}` : 'Take Quizzes'}
-                </button>
+                {field && (
+                  <button
+                    className={`resource-quiz-btn ${proficiency ? 'quiz-passed' : ''}`}
+                    onClick={() => navigate(`/quiz/${field.id}`)}
+                  >
+                    {proficiency ? `✓ ${proficiency}` : 'Take Quizzes'}
+                  </button>
+                )}
               </div>
               {proficiency && (
                 <p className="resource-quiz-badge">Proficiency: {proficiency}</p>

@@ -23,7 +23,7 @@ function formatBotText(text) {
 export default function AtlasBot() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'bot', text: "Hi! I'm EduBot, your EduConnect assistant. I can help you find features, open resources, or fix issues. Ask me anything.", actions: [] }
+    { role: 'bot', text: "Hi! I'm EduBot, your EduConnect assistant. I can help you find features, open resources (Computing, Law, Business, and more), or fix issues. Ask me anything.", actions: [] }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)

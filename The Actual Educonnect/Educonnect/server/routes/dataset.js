@@ -27,6 +27,7 @@ function rowToUser(row) {
     state: row.state,
     zipCode: row.zip_code,
     university: row.university,
+    degreeProgram: row.degree_program || '',
     currentGPA: row.current_gpa,
     creditsCompleted: row.credits_completed,
     creditsRemaining: row.credits_remaining,

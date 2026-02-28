@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import Navigation from '../components/Navigation'
+import { logActivity } from '../api/activityApi'
 import { learningFields, PASSING_SCORE, getProficiency } from '../data/quizData'
 import '../styles/Quiz.css'
 
@@ -57,6 +58,7 @@ function Quiz() {
       const scorePercent = Math.round(score * 100)
       setResult({ score: scorePercent, passed, correct, total: totalQuestions, isFinal })
       recordFieldProgress(fieldId, quiz.id, score, isFinal)
+      if (user?.id) logActivity(user.id, 'quiz_completed', { fieldId, quizId: quiz.id, score: scorePercent, passed, isFinal })
       setSubmitted(true)
     } else {
       setCurrentIndex((i) => i + 1)

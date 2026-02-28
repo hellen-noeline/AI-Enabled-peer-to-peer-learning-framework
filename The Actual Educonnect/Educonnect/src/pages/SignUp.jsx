@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchSignupOptions, submitSignupSuggestion } from '../api/signupOptionsApi'
+import DropdownWithSpecify from '../components/DropdownWithSpecify'
+import TagsInputWithDropdown from '../components/TagsInputWithDropdown'
 import '../styles/SignUp.css'
 
 function SignUp() {
@@ -11,7 +14,16 @@ function SignUp() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(1)
+  const [signupOptions, setSignupOptions] = useState({})
   const totalSteps = signUpAs === 'admin' ? 1 : 4
+
+  useEffect(() => {
+    let cancelled = false
+    fetchSignupOptions()
+      .then((data) => { if (!cancelled) setSignupOptions(data) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -29,7 +41,10 @@ function SignUp() {
     state: '',
     zipCode: '',
     university: '',
-    
+    degreeProgram: '',
+    courseArea: '',
+    orderedInterests: '',
+
     // Academic Info
     creditsCompleted: '',
     creditsRemaining: '',
@@ -78,9 +93,9 @@ function SignUp() {
                formData.password && formData.confirmPassword &&
                formData.password === formData.confirmPassword
       case 2:
-        return formData.university
+        return formData.university && formData.courseArea
       case 3:
-        return formData.csInterests
+        return orderedInterestsList.length > 0
       case 4:
         return true
       default:
@@ -126,6 +141,19 @@ function SignUp() {
     setLoading(true)
 
     try {
+      // Teach the model: submit any custom (non-predefined) values so they become options later
+      const singleValueFields = [
+        'university', 'degreeProgram', 'nationality', 'countryOfResidence',
+        'preferredLearningStyle', 'studyPartnersPreferences', 'preferredStudyHours'
+      ]
+      for (const field of singleValueFields) {
+        const value = (formData[field] || '').trim()
+        if (!value) continue
+        const options = signupOptions[field] || []
+        if (!options.includes(value)) {
+          submitSignupSuggestion(field, value).catch(() => {})
+        }
+      }
       // Remove confirmPassword before saving
       const { confirmPassword, ...userData } = formData
       const newUser = await signup(userData)
@@ -141,6 +169,83 @@ function SignUp() {
   const learningStyles = ['Visual', 'Auditory', 'Kinesthetic', 'Reading/Writing']
   const partnerPreferences = ['One-on-one', 'Group', 'Online', 'In-person']
   const studyHours = ['Morning', 'Afternoon', 'Evening', 'Late night']
+
+  const courseAreaOptions = [
+    { value: '', label: 'Select your course area' },
+    { value: 'Computing & IT', label: 'Computing & IT' },
+    { value: 'Law', label: 'Law' },
+    { value: 'Business & Management', label: 'Business & Management' },
+    { value: 'Other', label: 'Other' }
+  ]
+
+  // General fields with sub-fields for interests
+  const INTEREST_FIELDS = [
+    {
+      field: 'Computing & IT',
+      subFields: [
+        'Artificial Intelligence',
+        'Machine Learning',
+        'Data Science',
+        'Natural Language Processing',
+        'Computer Vision',
+        'Deep Learning',
+        'Cybersecurity',
+        'Web Development',
+        'Mobile Development'
+      ]
+    },
+    {
+      field: 'Law',
+      subFields: [
+        'Contract Law',
+        'Constitutional Law',
+        'Criminal Law',
+        'International Law',
+        'Legal Writing',
+        'Human Rights',
+        'Commercial Law'
+      ]
+    },
+    {
+      field: 'Business & Management',
+      subFields: [
+        'Accounting & Finance',
+        'Economics',
+        'Marketing',
+        'Human Resources',
+        'Entrepreneurship',
+        'Supply Chain & Logistics',
+        'Hospitality & Tourism'
+      ]
+    }
+  ]
+  const INTEREST_TOPICS = INTEREST_FIELDS.flatMap(({ field, subFields }) => [field, ...subFields])
+
+  const orderedInterestsList = formData.orderedInterests
+    ? formData.orderedInterests.split(',').map((s) => s.trim()).filter(Boolean)
+    : []
+
+  const toggleInterest = (topic) => {
+    if (orderedInterestsList.includes(topic)) {
+      setFormData((prev) => ({
+        ...prev,
+        orderedInterests: orderedInterestsList.filter((t) => t !== topic).join(', ')
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        orderedInterests: [...orderedInterestsList, topic].join(', ')
+      }))
+    }
+  }
+
+  const moveInterest = (index, direction) => {
+    const next = [...orderedInterestsList]
+    const newIndex = direction === 'up' ? index - 1 : index + 1
+    if (newIndex < 0 || newIndex >= next.length) return
+    ;[next[index], next[newIndex]] = [next[newIndex], next[index]]
+    setFormData((prev) => ({ ...prev, orderedInterests: next.join(', ') }))
+  }
 
   return (
     <div className="signup-container">
@@ -335,6 +440,26 @@ function SignUp() {
                   </select>
                 </div>
                 <div className="form-group">
+                  <label>Nationality</label>
+                  <input
+                    type="text"
+                    name="nationality"
+                    value={formData.nationality}
+                    onChange={handleChange}
+                    placeholder="e.g. Uganda, Kenya"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Country of Residence</label>
+                  <input
+                    type="text"
+                    name="countryOfResidence"
+                    value={formData.countryOfResidence}
+                    onChange={handleChange}
+                    placeholder="e.g. Uganda, Kenya"
+                  />
+                </div>
+                <div className="form-group">
                   <label>Password *</label>
                   <input
                     type="password"
@@ -369,14 +494,53 @@ function SignUp() {
               <h2>Academic Information</h2>
               <div className="form-grid">
                 <div className="form-group">
+                  <label>Your course (for suggestions) *</label>
+                  <select
+                    name="courseArea"
+                    value={formData.courseArea}
+                    onChange={handleChange}
+                    required
+                  >
+                    {courseAreaOptions.map((opt) => (
+                      <option key={opt.value || 'blank'} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <p className="form-hint">We use this to suggest relevant resources and materials.</p>
+                </div>
+                <div className="form-group">
                   <label>University *</label>
                   <input
                     type="text"
                     name="university"
                     value={formData.university}
                     onChange={handleChange}
+                    list="university-suggestions"
+                    placeholder="Type or choose from suggestions"
+                    autoComplete="off"
                     required
                   />
+                  <datalist id="university-suggestions">
+                    {(signupOptions.university || []).map((opt) => (
+                      <option key={opt} value={opt} />
+                    ))}
+                  </datalist>
+                </div>
+                <div className="form-group">
+                  <label>Degree Program</label>
+                  <input
+                    type="text"
+                    name="degreeProgram"
+                    value={formData.degreeProgram}
+                    onChange={handleChange}
+                    list="degreeProgram-suggestions"
+                    placeholder="Type or choose from suggestions"
+                    autoComplete="off"
+                  />
+                  <datalist id="degreeProgram-suggestions">
+                    {(signupOptions.degreeProgram || []).map((opt) => (
+                      <option key={opt} value={opt} />
+                    ))}
+                  </datalist>
                 </div>
                 <div className="form-group">
                   <label>Credits Completed</label>
@@ -394,16 +558,6 @@ function SignUp() {
                     name="creditsRemaining"
                     value={formData.creditsRemaining}
                     onChange={handleChange}
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Course Codes (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="courseCodes"
-                    value={formData.courseCodes}
-                    onChange={handleChange}
-                    placeholder="e.g., CS101, MATH201, DS401"
                   />
                 </div>
                 <div className="form-group">
@@ -437,88 +591,122 @@ function SignUp() {
               exit={{ opacity: 0, x: -20 }}
             >
               <h2>Interests & Skills</h2>
+
+              <div className="form-group full-width" style={{ marginBottom: '1.5rem' }}>
+                <label>Interests (order from most to least relevant) *</label>
+                <p className="form-hint">Select fields and sub-fields that apply, then order your list: first = most relevant. We use this to personalise suggestions.</p>
+                <div className="interests-by-field">
+                  {INTEREST_FIELDS.map(({ field, subFields }) => (
+                    <div key={field} className="interest-field-group">
+                      <div className="interest-field-heading">{field}</div>
+                      <div className="interests-checkbox-list">
+                        <label key={field} className="interest-checkbox-label field-option">
+                          <input
+                            type="checkbox"
+                            checked={orderedInterestsList.includes(field)}
+                            onChange={() => toggleInterest(field)}
+                          />
+                          <span>General interest in this field</span>
+                        </label>
+                        {subFields.map((sub) => (
+                          <label key={sub} className="interest-checkbox-label subfield-option">
+                            <input
+                              type="checkbox"
+                              checked={orderedInterestsList.includes(sub)}
+                              onChange={() => toggleInterest(sub)}
+                            />
+                            <span>{sub}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {orderedInterestsList.length > 0 && (
+                  <div className="ordered-interests-list">
+                    <span className="ordered-label">Your order (most relevant first — use arrows to reorder):</span>
+                    <ul className="ordered-interests-ul">
+                      {orderedInterestsList.map((topic, index) => (
+                        <li key={topic} className="ordered-interest-item">
+                          <span className="order-num">{index + 1}.</span>
+                          <span>{topic}</span>
+                          <span className="order-buttons">
+                            <button type="button" onClick={() => moveInterest(index, 'up')} disabled={index === 0} aria-label="Move up">↑</button>
+                            <button type="button" onClick={() => moveInterest(index, 'down')} disabled={index === orderedInterestsList.length - 1} aria-label="Move down">↓</button>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
               <div className="form-grid">
-                <div className="form-group full-width">
-                  <label>CS and Data Science Interests * (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="csInterests"
-                    value={formData.csInterests}
-                    onChange={handleChange}
-                    placeholder="e.g., AI, Machine Learning, Data Science, NLP"
-                    required
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Strong Topics (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="strongTopics"
-                    value={formData.strongTopics}
-                    onChange={handleChange}
-                    placeholder="e.g., Algorithms, Linear Algebra, Python, Databases"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Weak Topics (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="weakTopics"
-                    value={formData.weakTopics}
-                    onChange={handleChange}
-                    placeholder="e.g., Statistics, Calculus, Networking, Operating Systems"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Technical Skills (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="technicalSkills"
-                    value={formData.technicalSkills}
-                    onChange={handleChange}
-                    placeholder="e.g., Python, JavaScript, Git, Docker"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Soft Skills (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="softSkills"
-                    value={formData.softSkills}
-                    onChange={handleChange}
-                    placeholder="e.g., Communication, Leadership, Teamwork"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Research Interests (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="researchInterests"
-                    value={formData.researchInterests}
-                    onChange={handleChange}
-                    placeholder="e.g., Machine Learning, AI, Cybersecurity"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Professional Interests (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="professionalInterests"
-                    value={formData.professionalInterests}
-                    onChange={handleChange}
-                    placeholder="e.g., ML Engineer, Data Scientist, Software Engineer"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Hobbies (comma-separated)</label>
-                  <input
-                    type="text"
-                    name="hobbies"
-                    value={formData.hobbies}
-                    onChange={handleChange}
-                    placeholder="e.g., Reading, Hiking, Photography"
-                  />
-                </div>
+                <TagsInputWithDropdown
+                  name="csInterests"
+                  label="Additional interests (optional)"
+                  value={formData.csInterests}
+                  options={signupOptions.csInterests || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  placeholder="Any field: e.g. AI, Contract Law, Marketing"
+                />
+                <TagsInputWithDropdown
+                  name="strongTopics"
+                  label="Strong Topics"
+                  value={formData.strongTopics}
+                  options={signupOptions.strongTopics || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                />
+                <TagsInputWithDropdown
+                  name="weakTopics"
+                  label="Weak Topics"
+                  value={formData.weakTopics}
+                  options={signupOptions.weakTopics || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                />
+                <TagsInputWithDropdown
+                  name="technicalSkills"
+                  label="Technical Skills"
+                  value={formData.technicalSkills}
+                  options={signupOptions.technicalSkills || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                />
+                <TagsInputWithDropdown
+                  name="softSkills"
+                  label="Soft Skills"
+                  value={formData.softSkills}
+                  options={signupOptions.softSkills || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                />
+                <TagsInputWithDropdown
+                  name="researchInterests"
+                  label="Research Interests"
+                  value={formData.researchInterests}
+                  options={signupOptions.researchInterests || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                />
+                <TagsInputWithDropdown
+                  name="professionalInterests"
+                  label="Professional Interests"
+                  value={formData.professionalInterests}
+                  options={signupOptions.professionalInterests || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                />
+                <TagsInputWithDropdown
+                  name="hobbies"
+                  label="Hobbies"
+                  value={formData.hobbies}
+                  options={signupOptions.hobbies || []}
+                  onChange={handleChange}
+                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                />
               </div>
             </motion.div>
           )}
@@ -533,45 +721,30 @@ function SignUp() {
             >
               <h2>Study Preferences</h2>
               <div className="form-grid">
-                <div className="form-group">
-                  <label>Preferred Learning Style</label>
-                  <select
-                    name="preferredLearningStyle"
-                    value={formData.preferredLearningStyle}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select</option>
-                    {learningStyles.map(style => (
-                      <option key={style} value={style}>{style}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Study Partners Preferences</label>
-                  <select
-                    name="studyPartnersPreferences"
-                    value={formData.studyPartnersPreferences}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select</option>
-                    {partnerPreferences.map(pref => (
-                      <option key={pref} value={pref}>{pref}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Preferred Study Hours</label>
-                  <select
-                    name="preferredStudyHours"
-                    value={formData.preferredStudyHours}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select</option>
-                    {studyHours.map(hour => (
-                      <option key={hour} value={hour}>{hour}</option>
-                    ))}
-                  </select>
-                </div>
+                <DropdownWithSpecify
+                  name="preferredLearningStyle"
+                  label="Preferred Learning Style"
+                  value={formData.preferredLearningStyle}
+                  options={signupOptions.preferredLearningStyle || learningStyles}
+                  onChange={handleChange}
+                  placeholder="Select or specify"
+                />
+                <DropdownWithSpecify
+                  name="studyPartnersPreferences"
+                  label="Study Partners Preferences"
+                  value={formData.studyPartnersPreferences}
+                  options={signupOptions.studyPartnersPreferences || partnerPreferences}
+                  onChange={handleChange}
+                  placeholder="Select or specify"
+                />
+                <DropdownWithSpecify
+                  name="preferredStudyHours"
+                  label="Preferred Study Hours"
+                  value={formData.preferredStudyHours}
+                  options={signupOptions.preferredStudyHours || studyHours}
+                  onChange={handleChange}
+                  placeholder="Select or specify"
+                />
                 <div className="form-group full-width">
                   <label>Bio</label>
                   <textarea

@@ -46,7 +46,7 @@ EduConnect is a comprehensive study partner platform designed to help students f
 
 ### 2. Smart Recommendation System
 - **AI-Powered Matching**: Weighted algorithm considering:
-  - CS and Data Science Interests (40%)
+  - Interests (additional + ordered, any field) (40%)
   - Technical Skills (15%)
   - Soft Skills (10%)
   - Research Interests (10%)
@@ -464,7 +464,7 @@ The app can run in two modes:
   currentGPA: string,
   technicalSkills: string,
   softSkills: string,
-  csInterests: string,
+  csInterests: string, // stored as "Additional interests" (any field)
   researchInterests: string,
   professionalInterests: string,
   hobbies: string,
@@ -715,7 +715,7 @@ Edit `src/pages/LearningResources.jsx`:
 - Location details
 
 **Step 3: Interests & Skills**
-- CS and Data Science Interests (required)
+- Additional interests (optional, any field)
 - Technical Skills
 - Soft Skills
 - Research Interests

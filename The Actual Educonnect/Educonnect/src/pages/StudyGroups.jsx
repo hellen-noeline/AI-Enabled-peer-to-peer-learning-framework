@@ -11,6 +11,8 @@ function StudyGroups() {
   const navigate = useNavigate()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
+  const [programmeFilter, setProgrammeFilter] = useState('all')
+  const [availableProgrammes, setAvailableProgrammes] = useState([])
 
   useEffect(() => {
     if (!user) {
@@ -23,13 +25,23 @@ function StudyGroups() {
       try {
         const { loadDataset, getDatasetUsers } = await import('../utils/datasetLoader')
         await loadDataset()
+        const datasetUsers = getDatasetUsers()
         const allUsers = [
-          ...getDatasetUsers(),
+          ...datasetUsers,
           ...JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
         ]
 
         const userGroups = createStudyGroups(user, allUsers)
         setGroups(userGroups)
+
+        // Collect unique degree programmes for optional filtering
+        const programmes = new Set()
+        allUsers.forEach(u => {
+          if (u.degreeProgram && typeof u.degreeProgram === 'string' && u.degreeProgram.trim().length > 0) {
+            programmes.add(u.degreeProgram)
+          }
+        })
+        setAvailableProgrammes(Array.from(programmes).sort())
       } catch (error) {
         console.error('Error generating groups:', error)
       } finally {
@@ -41,19 +53,22 @@ function StudyGroups() {
   }, [user, navigate])
 
   const createStudyGroups = (currentUser, allUsers) => {
-    // Get user's interests
-    const userInterests = parseCommaSeparated(currentUser.csInterests || '')
+    // Unified interests: ordered (fields + sub-fields) + additional interests
+    const ordered = parseCommaSeparated(currentUser.orderedInterests || '')
+    const additional = parseCommaSeparated(currentUser.csInterests || '')
+    const userInterests = [...ordered, ...additional].filter((v, i, a) => a.indexOf(v) === i)
     const userTechSkills = parseCommaSeparated(currentUser.technicalSkills || '')
     const userResearch = parseCommaSeparated(currentUser.researchInterests || '')
 
     // Filter out current user
     const otherUsers = allUsers.filter(u => u.id !== currentUser.id)
 
-    // Create groups based on interests
+    // Create groups based on interests (ordered + additional)
     const interestGroups = {}
     
     userInterests.forEach(interest => {
       const interestKey = interest.toLowerCase().trim()
+      if (!interestKey) return
       if (!interestGroups[interestKey]) {
         interestGroups[interestKey] = {
           name: interest,
@@ -64,9 +79,11 @@ function StudyGroups() {
         }
       }
 
-      // Find users with similar interests
+      // Find users with similar interests (ordered + additional)
       otherUsers.forEach(otherUser => {
-        const otherInterests = parseCommaSeparated(otherUser.csInterests || '')
+        const otherOrdered = parseCommaSeparated(otherUser.orderedInterests || '')
+        const otherAdditional = parseCommaSeparated(otherUser.csInterests || '')
+        const otherInterests = [...otherOrdered, ...otherAdditional]
         if (otherInterests.some(i => i.toLowerCase().trim() === interestKey)) {
           // Check if user is not already in group
           if (!interestGroups[interestKey].members.find(m => m.id === otherUser.id)) {
@@ -98,12 +115,21 @@ function StudyGroups() {
     // Convert to array and filter groups with at least 2 members (including current user)
     const groupsArray = Object.values(interestGroups)
       .filter(group => group.members.length >= 2)
-      .map(group => ({
-        ...group,
-        totalMembers: group.members.length + 1, // +1 for current user
-        id: `group_${group.interest}_${Date.now()}`,
-        chatRoomId: getChatRoomId(group)
-      }))
+      .map(group => {
+        const programmeSet = new Set()
+        group.members.forEach(m => {
+          if (m.degreeProgram) programmeSet.add(m.degreeProgram)
+        })
+        if (currentUser.degreeProgram) programmeSet.add(currentUser.degreeProgram)
+
+        return {
+          ...group,
+          totalMembers: group.members.length + 1, // +1 for current user
+          programmes: Array.from(programmeSet),
+          id: `group_${group.interest}_${Date.now()}`,
+          chatRoomId: getChatRoomId(group)
+        }
+      })
       .sort((a, b) => b.matchScore - a.matchScore)
 
     return groupsArray
@@ -113,52 +139,46 @@ function StudyGroups() {
     let score = 0
     let factors = 0
 
-    // Primary interest match (40%)
-    const user1Interests = parseCommaSeparated(user1.csInterests || '')
-    const user2Interests = parseCommaSeparated(user2.csInterests || '')
-    if (user1Interests.some(i => i.toLowerCase().trim() === primaryInterest) &&
-        user2Interests.some(i => i.toLowerCase().trim() === primaryInterest)) {
-      score += 0.4
-    }
-    factors += 0.4
+    // Primary: unified interests (ordered + additional) — 50% weight
+    const u1Interests = [...parseCommaSeparated(user1.orderedInterests || ''), ...parseCommaSeparated(user1.csInterests || '')]
+    const u2Interests = [...parseCommaSeparated(user2.orderedInterests || ''), ...parseCommaSeparated(user2.csInterests || '')]
+    const bothHavePrimary = u1Interests.some(i => i.toLowerCase().trim() === primaryInterest) &&
+      u2Interests.some(i => i.toLowerCase().trim() === primaryInterest)
+    if (bothHavePrimary) score += 0.25
+    const interestOverlap = u1Interests.filter(i => u2Interests.some(i2 => i.toLowerCase().trim() === i2.toLowerCase().trim())).length
+    const interestUnion = new Set([...u1Interests.map(i => i.toLowerCase()), ...u2Interests.map(i => i.toLowerCase())]).size
+    if (interestUnion > 0) score += (interestOverlap / interestUnion) * 0.25
+    factors += 0.5
 
-    // Technical skills match (25%)
+    // Technical skills match (20%)
     const user1Tech = parseCommaSeparated(user1.technicalSkills || '')
     const user2Tech = parseCommaSeparated(user2.technicalSkills || '')
-    const techIntersection = user1Tech.filter(t => 
+    const techIntersection = user1Tech.filter(t =>
       user2Tech.some(t2 => t.toLowerCase().trim() === t2.toLowerCase().trim())
     ).length
     const techUnion = new Set([...user1Tech, ...user2Tech]).size
-    if (techUnion > 0) {
-      score += (techIntersection / techUnion) * 0.25
-    }
-    factors += 0.25
+    if (techUnion > 0) score += (techIntersection / techUnion) * 0.2
+    factors += 0.2
 
-    // Research interests match (20%)
+    // Research interests match (15%)
     const user1Research = parseCommaSeparated(user1.researchInterests || '')
     const user2Research = parseCommaSeparated(user2.researchInterests || '')
-    const researchIntersection = user1Research.filter(r => 
+    const researchIntersection = user1Research.filter(r =>
       user2Research.some(r2 => r.toLowerCase().trim() === r2.toLowerCase().trim())
     ).length
     const researchUnion = new Set([...user1Research, ...user2Research]).size
-    if (researchUnion > 0) {
-      score += (researchIntersection / researchUnion) * 0.2
-    }
-    factors += 0.2
+    if (researchUnion > 0) score += (researchIntersection / researchUnion) * 0.15
+    factors += 0.15
 
     // Learning style match (10%)
     if (user1.preferredLearningStyle && user2.preferredLearningStyle) {
-      if (user1.preferredLearningStyle === user2.preferredLearningStyle) {
-        score += 0.1
-      }
+      if (user1.preferredLearningStyle === user2.preferredLearningStyle) score += 0.1
     }
     factors += 0.1
 
     // Study hours preference match (5%)
     if (user1.preferredStudyHours && user2.preferredStudyHours) {
-      if (user1.preferredStudyHours === user2.preferredStudyHours) {
-        score += 0.05
-      }
+      if (user1.preferredStudyHours === user2.preferredStudyHours) score += 0.05
     }
     factors += 0.05
 
@@ -189,6 +209,11 @@ function StudyGroups() {
     )
   }
 
+  const filteredGroups = groups.filter(group => {
+    if (programmeFilter === 'all') return true
+    return Array.isArray(group.programmes) && group.programmes.includes(programmeFilter)
+  })
+
   return (
     <div className="groups-container">
       <Navigation />
@@ -204,19 +229,31 @@ function StudyGroups() {
           </div>
           <div className="groups-stats">
             <div className="stat-item">
-              <span className="stat-value">{groups.length}</span>
+              <span className="stat-value">{filteredGroups.length}</span>
               <span className="stat-label">Groups</span>
             </div>
             <div className="stat-item">
               <span className="stat-value">
-                {groups.reduce((sum, g) => sum + g.totalMembers, 0)}
+                {filteredGroups.reduce((sum, g) => sum + g.totalMembers, 0)}
               </span>
               <span className="stat-label">Total Members</span>
+            </div>
+            <div className="stat-item programme-filter-item">
+              <select
+                value={programmeFilter}
+                onChange={(e) => setProgrammeFilter(e.target.value)}
+                className="programme-select"
+              >
+                <option value="all">All programmes</option>
+                {availableProgrammes.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
             </div>
           </div>
         </motion.div>
 
-        {groups.length === 0 ? (
+        {filteredGroups.length === 0 ? (
           <motion.div
             className="no-groups"
             initial={{ opacity: 0 }}
@@ -228,7 +265,7 @@ function StudyGroups() {
           </motion.div>
         ) : (
           <div className="groups-grid">
-            {groups.map((group, index) => (
+            {filteredGroups.map((group, index) => (
               <motion.div
                 key={group.id}
                 className="group-card"
