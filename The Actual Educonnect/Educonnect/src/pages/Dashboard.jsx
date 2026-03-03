@@ -6,6 +6,7 @@ import { useStudy } from '../contexts/StudyContext'
 import { useNLP } from '../contexts/NLPContext'
 import { learningFields } from '../data/quizData'
 import Navigation from '../components/Navigation'
+import { IconCheck } from '../components/Icons'
 import { fetchStudyPlan } from '../api/studyPlanApi'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
 import '../styles/Dashboard.css'
@@ -151,7 +152,7 @@ function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
         >
           <div>
-            <h1>Welcome back, {user.firstName}! 👋</h1>
+            <h1>Welcome back, {user.firstName}!</h1>
             <p>Here's your study overview</p>
             {user.university && (
               <p className="dashboard-programme">
@@ -297,7 +298,7 @@ function Dashboard() {
               <p className="timer-label">Time spent studying (pauses after 5 min inactive)</p>
               <p className="timer-progress-note">
                 {sessionTimer >= 300
-                  ? '✓ Progress will be logged to your stats'
+                  ? <><IconCheck className="inline-check" /> Progress will be logged to your stats</>
                   : `${formatTime(300 - sessionTimer)} more to log progress (min 5 min)`}
               </p>
             </div>

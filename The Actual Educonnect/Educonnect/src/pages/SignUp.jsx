@@ -74,7 +74,11 @@ function SignUp() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData(prev => {
+      const next = { ...prev, [name]: value }
+      if (name === 'courseArea') next.degreeProgram = ''
+      return next
+    })
   }
 
   const handleMultiSelectChange = (name, value) => {
@@ -170,13 +174,46 @@ function SignUp() {
   const partnerPreferences = ['One-on-one', 'Group', 'Online', 'In-person']
   const studyHours = ['Morning', 'Afternoon', 'Evening', 'Late night']
 
+  // Full list of programmes across all fields (used when API has not loaded or returns empty)
+  const defaultDegreePrograms = [
+    'Bachelor of Information Technology (College of Computing and Information Sciences)',
+    'Bachelor of Computer Science (College of Computing and Information Sciences)',
+    'Bachelor of Science in Software Engineering (College of Computing and Information Sciences)',
+    'Bachelor of Science in Computer Engineering (College of Computing and Information Sciences)',
+    'Bachelor of Business Administration (College of Business and Management Sciences)',
+    'Bachelor of Commerce (College of Business and Management Sciences)',
+    'Bachelor of Science in Accounting (College of Business and Management Sciences)',
+    'Bachelor of Laws (LLB) (School of Law)',
+    'Bachelor of Education (Arts) (College of Education and External Studies)',
+    'Bachelor of Education (Science) (College of Education and External Studies)',
+    'Bachelor of Science in Agriculture (College of Agricultural and Environmental Sciences)',
+    'Bachelor of Nursing (College of Health Sciences)',
+    'Bachelor of Arts in Social Sciences (College of Humanities and Social Sciences)',
+    'Bachelor of Arts in Literature (College of Humanities and Social Sciences)',
+    'Bachelor of Divinity (Bishop Tucker School of Theology)'
+  ]
+  // Show programmes from all fields (full list; no filtering by course area)
+  const degreeProgramOptions = (signupOptions.degreeProgram?.length ? signupOptions.degreeProgram : defaultDegreePrograms)
+
   const courseAreaOptions = [
     { value: '', label: 'Select your course area' },
     { value: 'Computing & IT', label: 'Computing & IT' },
     { value: 'Law', label: 'Law' },
     { value: 'Business & Management', label: 'Business & Management' },
+    { value: 'Education', label: 'Education' },
+    { value: 'Humanities', label: 'Humanities' },
+    { value: 'Health', label: 'Health' },
+    { value: 'Agriculture', label: 'Agriculture' },
     { value: 'Other', label: 'Other' }
   ]
+
+  // Use course-area–specific suggestions when user has selected a course area
+  const getOptionsForField = (field) => {
+    const area = (formData.courseArea || '').trim()
+    const byArea = signupOptions.optionsByCourseArea?.[area]?.[field]
+    if (byArea && Array.isArray(byArea) && byArea.length > 0) return byArea
+    return signupOptions[field] || []
+  }
 
   // General fields with sub-fields for interests
   const INTEREST_FIELDS = [
@@ -527,20 +564,16 @@ function SignUp() {
                 </div>
                 <div className="form-group">
                   <label>Degree Program</label>
-                  <input
-                    type="text"
+                  <select
                     name="degreeProgram"
                     value={formData.degreeProgram}
                     onChange={handleChange}
-                    list="degreeProgram-suggestions"
-                    placeholder="Type or choose from suggestions"
-                    autoComplete="off"
-                  />
-                  <datalist id="degreeProgram-suggestions">
-                    {(signupOptions.degreeProgram || []).map((opt) => (
-                      <option key={opt} value={opt} />
+                  >
+                    <option value="">Select your degree program</option>
+                    {degreeProgramOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Credits Completed</label>
@@ -655,7 +688,7 @@ function SignUp() {
                   name="strongTopics"
                   label="Strong Topics"
                   value={formData.strongTopics}
-                  options={signupOptions.strongTopics || []}
+                  options={getOptionsForField('strongTopics')}
                   onChange={handleChange}
                   onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
                 />
@@ -663,7 +696,7 @@ function SignUp() {
                   name="weakTopics"
                   label="Weak Topics"
                   value={formData.weakTopics}
-                  options={signupOptions.weakTopics || []}
+                  options={getOptionsForField('weakTopics')}
                   onChange={handleChange}
                   onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
                 />
@@ -671,7 +704,7 @@ function SignUp() {
                   name="technicalSkills"
                   label="Technical Skills"
                   value={formData.technicalSkills}
-                  options={signupOptions.technicalSkills || []}
+                  options={getOptionsForField('technicalSkills')}
                   onChange={handleChange}
                   onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
                 />
@@ -687,7 +720,7 @@ function SignUp() {
                   name="researchInterests"
                   label="Research Interests"
                   value={formData.researchInterests}
-                  options={signupOptions.researchInterests || []}
+                  options={getOptionsForField('researchInterests')}
                   onChange={handleChange}
                   onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
                 />
@@ -695,7 +728,7 @@ function SignUp() {
                   name="professionalInterests"
                   label="Professional Interests"
                   value={formData.professionalInterests}
-                  options={signupOptions.professionalInterests || []}
+                  options={getOptionsForField('professionalInterests')}
                   onChange={handleChange}
                   onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
                 />

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import Navigation from '../components/Navigation'
+import { IconCheck } from '../components/Icons'
 import { logActivity } from '../api/activityApi'
 import { learningFields, PASSING_SCORE, getProficiency } from '../data/quizData'
 import '../styles/Quiz.css'
@@ -93,7 +94,7 @@ function Quiz() {
               {result.correct} of {result.total} correct (need {Math.ceil(PASSING_SCORE * 100)}% to pass)
             </p>
             {result.passed && (
-              <p className="quiz-credit-msg">✓ Study progress recorded – 0.25h credit added</p>
+              <p className="quiz-credit-msg"><IconCheck className="inline-check" /> Study progress recorded – 0.25h credit added</p>
             )}
             <div className="quiz-result-actions">
               <button

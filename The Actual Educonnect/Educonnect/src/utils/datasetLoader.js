@@ -81,12 +81,14 @@ export async function loadDataset() {
       // Fall back to CSV
     }
 
-    // Fallback: load Ugandan students CSV when API is unavailable
+    // Fallback: load unified or Ugandan students CSV when API is unavailable
     try {
-      // Prefer extended Ugandan dataset with degree programmes if available
-      let response = await fetch('/ugandan_students_dataset_1050_extended.csv')
+      // Prefer unified dataset (all courses equally represented)
+      let response = await fetch('/educonnect_students_unified.csv')
       if (!response.ok) {
-        // Fallback to base CSV if extended file is missing
+        response = await fetch('/ugandan_students_dataset_1050_extended.csv')
+      }
+      if (!response.ok) {
         response = await fetch('/ugandan_students_dataset_1050.csv')
       }
       if (!response.ok) throw new Error(response.statusText)

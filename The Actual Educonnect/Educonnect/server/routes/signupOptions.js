@@ -4,8 +4,19 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const publicPath = path.join(__dirname, '..', '..', 'public')
+// Resolve public folder: from server/routes -> go up to project root then public; or from server cwd -> ../public
+const publicPathFromFile = path.join(__dirname, '..', '..', 'public')
+const publicPathFromCwd = path.join(process.cwd(), 'public')
+const publicPathFromCwdParent = path.join(process.cwd(), '..', 'public')
+function resolvePublicPath() {
+  if (existsSync(path.join(publicPathFromFile, 'curriculum_fallback.json'))) return publicPathFromFile
+  if (existsSync(path.join(publicPathFromCwd, 'curriculum_fallback.json'))) return publicPathFromCwd
+  if (existsSync(path.join(publicPathFromCwdParent, 'curriculum_fallback.json'))) return publicPathFromCwdParent
+  return publicPathFromFile
+}
+const publicPath = resolvePublicPath()
 const curriculumPath = path.join(publicPath, 'university_curriculum.json')
+const fallbackPath = path.join(publicPath, 'curriculum_fallback.json')
 
 const router = Router()
 
@@ -67,29 +78,124 @@ const STATIC_OPTIONS = {
   countryOfResidence: ['Uganda', 'Kenya', 'Tanzania', 'Rwanda', 'Other']
 }
 
+/** Classify a programme (course + college) into a course area for filtering the degree dropdown */
+function getCourseAreaFromProgramme(course, college) {
+  const c = (course || '').toLowerCase()
+  const g = (college || '').toLowerCase()
+  const combined = `${c} ${g}`
+
+  if (/law|llb|legal/.test(combined)) return 'Law'
+  if (/agriculture|agri|environmental sciences|crop|soil|agribusiness|extension/.test(combined)) return 'Agriculture'
+  if (/business|commerce|accounting|finance|economics|marketing|hr|human resource|hospitality|tourism|logistics|procurement|administration/.test(combined)) return 'Business & Management'
+  if (/computing|computer|information technology|software|bit|bcs|informatics|engineering.*technology/.test(combined)) return 'Computing & IT'
+  if (/education|teaching|b\.?ed|pedagogy/.test(combined)) return 'Education'
+  if (/humanities|literature|philosophy|arts|social sciences|divinity|theology/.test(combined)) return 'Humanities'
+  if (/health|nursing|medical|medicine|clinical/.test(combined)) return 'Health'
+  return 'Other'
+}
+
 function loadCurriculumOptions() {
-  const options = { university: [], degreeProgram: [] }
-  if (!existsSync(curriculumPath)) return options
-  try {
-    const raw = readFileSync(curriculumPath, 'utf8')
-    const list = JSON.parse(raw)
-    if (!Array.isArray(list)) return options
-    const universities = new Set()
-    const programmes = new Set()
+  const options = { university: [], degreeProgram: [], degreeProgramByCourseArea: {} }
+  const programmes = new Set()
+  const universities = new Set()
+  const byArea = {}
+
+  const courseAreas = ['Computing & IT', 'Law', 'Business & Management', 'Education', 'Humanities', 'Health', 'Agriculture', 'Other']
+  courseAreas.forEach((area) => { byArea[area] = new Set() })
+
+  function addFromList(list) {
+    if (!Array.isArray(list)) return
     for (const item of list) {
       if (item.university) universities.add(item.university.trim())
       const course = (item.course || '').trim()
       const college = (item.college || '').trim()
-      if (course) {
-        programmes.add(college ? `${course} (${college})` : course)
-      }
+      if (!course) continue
+      const label = college ? `${course} (${college})` : course
+      programmes.add(label)
+      const area = getCourseAreaFromProgramme(course, college)
+      if (byArea[area]) byArea[area].add(label)
+    }
+  }
+  try {
+    if (existsSync(curriculumPath)) {
+      const raw = readFileSync(curriculumPath, 'utf8')
+      addFromList(JSON.parse(raw))
+    }
+    if (existsSync(fallbackPath)) {
+      const raw = readFileSync(fallbackPath, 'utf8')
+      const fallback = JSON.parse(raw)
+      addFromList(fallback)
     }
     options.university = [...universities].sort()
     options.degreeProgram = [...programmes].sort()
+    options.degreeProgramByCourseArea = {}
+    courseAreas.forEach((area) => {
+      options.degreeProgramByCourseArea[area] = [...byArea[area]].sort()
+    })
   } catch (e) {
     console.warn('Signup options: could not load curriculum', e.message)
   }
   return options
+}
+
+// Options tailored by course area so suggestions match the user's field
+const OPTIONS_BY_COURSE_AREA = {
+  'Computing & IT': {
+    strongTopics: ['Algorithms', 'Data Structures', 'Linear Algebra', 'Python', 'Databases', 'Web Development', 'Machine Learning', 'Programming', 'Software Engineering', 'Networking', 'Operating Systems'],
+    weakTopics: ['Statistics', 'Calculus', 'DevOps', 'Research Methods', 'Mobile Development', 'Cloud Computing', 'Linear Algebra', 'Security'],
+    technicalSkills: ['Python', 'JavaScript', 'Java', 'R', 'SQL', 'Git', 'Docker', 'TensorFlow', 'Pandas', 'C++', 'React', 'Node.js', 'Machine Learning', 'Deep Learning', 'Cloud Computing'],
+    professionalInterests: ['ML Engineer', 'Data Scientist', 'Software Engineer', 'Cybersecurity Analyst', 'AI Researcher', 'Web Developer', 'DevOps Engineer'],
+    researchInterests: ['Machine Learning', 'AI', 'Cybersecurity', 'Computer Vision', 'NLP', 'Data Science', 'Artificial Intelligence']
+  },
+  'Law': {
+    strongTopics: ['Contract Law', 'Constitutional Law', 'Legal Writing', 'Legal Research', 'Criminal Law', 'International Law', 'Human Rights', 'Commercial Law', 'Tort Law'],
+    weakTopics: ['Criminal Procedure', 'International Law', 'Legal Latin', 'Statutory Interpretation', 'Evidence', 'Legal Drafting'],
+    technicalSkills: ['Legal Research', 'Contract Drafting', 'Case Analysis', 'Statutory Interpretation', 'Mooting', 'Legal Writing', 'Citation', 'Excel'],
+    professionalInterests: ['Lawyer', 'Legal Advisor', 'Judge', 'Legal Researcher', 'Prosecutor', 'Corporate Counsel', 'Human Rights Advocate'],
+    researchInterests: ['Human Rights', 'Commercial Law', 'International Law', 'Constitutional Law', 'Criminal Justice', 'Legal Theory']
+  },
+  'Business & Management': {
+    strongTopics: ['Accounting', 'Economics', 'Marketing', 'Management', 'Finance', 'Organizational Behavior', 'Strategy', 'Supply Chain'],
+    weakTopics: ['Financial Reporting', 'Quantitative Methods', 'Organizational Behavior', 'Statistics', 'Business Law', 'Taxation'],
+    technicalSkills: ['Accounting', 'Financial Modeling', 'Excel', 'SPSS', 'Project Management', 'Data Analysis', 'Presentation', 'CRM'],
+    professionalInterests: ['Accountant', 'Financial Analyst', 'Marketing Manager', 'HR Specialist', 'Consultant', 'Entrepreneur', 'Operations Manager'],
+    researchInterests: ['Consumer Behavior', 'Organizational Strategy', 'Sustainability', 'Finance', 'Marketing', 'Entrepreneurship']
+  },
+  'Education': {
+    strongTopics: ['Curriculum Design', 'Educational Psychology', 'Assessment', 'Teaching Methods', 'Child Development', 'Literacy', 'Numeracy'],
+    weakTopics: ['Research Methods', 'Statistics in Education', 'Special Needs', 'Educational Technology', 'Policy'],
+    technicalSkills: ['Lesson Planning', 'Assessment Design', 'Classroom Management', 'EdTech', 'Excel', 'Presentation'],
+    professionalInterests: ['Teacher', 'Curriculum Developer', 'Education Consultant', 'School Administrator', 'Tutor', 'Researcher'],
+    researchInterests: ['Learning Sciences', 'Educational Policy', 'Teacher Training', 'Inclusive Education', 'EdTech']
+  },
+  'Humanities': {
+    strongTopics: ['Literature', 'History', 'Philosophy', 'Writing', 'Critical Analysis', 'Research Methods'],
+    weakTopics: ['Quantitative Methods', 'Statistics', 'Digital Humanities', 'Academic Writing'],
+    technicalSkills: ['Research', 'Writing', 'Citation', 'Archival Research', 'Presentation', 'Excel'],
+    professionalInterests: ['Writer', 'Researcher', 'Editor', 'Academic', 'Museum Curator', 'Journalist'],
+    researchInterests: ['Literature', 'History', 'Philosophy', 'Cultural Studies', 'Gender Studies']
+  },
+  'Health': {
+    strongTopics: ['Anatomy', 'Physiology', 'Clinical Skills', 'Pharmacology', 'Patient Care', 'Medical Ethics'],
+    weakTopics: ['Statistics', 'Research Methods', 'Health Informatics', 'Epidemiology'],
+    technicalSkills: ['Clinical Assessment', 'Patient Documentation', 'Medical Research', 'Excel', 'SPSS'],
+    professionalInterests: ['Nurse', 'Clinical Officer', 'Researcher', 'Health Educator', 'Public Health Specialist'],
+    researchInterests: ['Public Health', 'Clinical Research', 'Epidemiology', 'Health Policy']
+  },
+  'Agriculture': {
+    strongTopics: ['Crop Science', 'Soil Science', 'Animal Husbandry', 'Agribusiness', 'Agricultural Economics', 'Extension'],
+    weakTopics: ['Statistics', 'Research Methods', 'Agricultural Policy', 'Biotechnology'],
+    technicalSkills: ['Field Assessment', 'Data Collection', 'Excel', 'GIS', 'Project Management'],
+    professionalInterests: ['Agronomist', 'Extension Officer', 'Agribusiness Manager', 'Researcher', 'Consultant'],
+    researchInterests: ['Crop Improvement', 'Sustainable Agriculture', 'Agricultural Economics', 'Climate Resilience']
+  },
+  'Other': {
+    strongTopics: STATIC_OPTIONS.strongTopics,
+    weakTopics: STATIC_OPTIONS.weakTopics,
+    technicalSkills: STATIC_OPTIONS.technicalSkills,
+    professionalInterests: STATIC_OPTIONS.professionalInterests,
+    researchInterests: STATIC_OPTIONS.researchInterests
+  }
 }
 
 function getSuggestions(db, fieldName) {
@@ -108,7 +214,7 @@ function mergeOptions(staticList, suggestedList) {
   return [...set]
 }
 
-// GET /api/signup-options — all options (from curriculum + static + learned suggestions)
+// GET /api/signup-options — all options (curriculum + fallback + static + learned) + by course area
 router.get('/signup-options', (req, res) => {
   try {
     const db = req.db
@@ -126,6 +232,18 @@ router.get('/signup-options', (req, res) => {
           : (STATIC_OPTIONS[field] || [])
       const suggested = getSuggestions(db, field)
       result[field] = mergeOptions(staticList, suggested)
+    }
+    result.degreeProgramByCourseArea = fromCurriculum.degreeProgramByCourseArea || {}
+    result.optionsByCourseArea = {}
+    for (const area of Object.keys(OPTIONS_BY_COURSE_AREA)) {
+      const areaOpts = OPTIONS_BY_COURSE_AREA[area]
+      result.optionsByCourseArea[area] = {
+        strongTopics: mergeOptions(areaOpts.strongTopics, getSuggestions(db, 'strongTopics')),
+        weakTopics: mergeOptions(areaOpts.weakTopics, getSuggestions(db, 'weakTopics')),
+        technicalSkills: mergeOptions(areaOpts.technicalSkills, getSuggestions(db, 'technicalSkills')),
+        professionalInterests: mergeOptions(areaOpts.professionalInterests, getSuggestions(db, 'professionalInterests')),
+        researchInterests: mergeOptions(areaOpts.researchInterests, getSuggestions(db, 'researchInterests'))
+      }
     }
     res.json(result)
   } catch (err) {

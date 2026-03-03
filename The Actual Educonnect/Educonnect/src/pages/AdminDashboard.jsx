@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { getAdminUsersApi } from '../api/authApi'
 import AdminNavigation from '../components/AdminNavigation'
+import { IconUsers, IconClipboardList, IconCheckCircle } from '../components/Icons'
 import '../styles/AdminDashboard.css'
 
 function AdminDashboard() {
@@ -40,7 +41,7 @@ function AdminDashboard() {
       value: loading ? '—' : totalUsers,
       subtitle: 'Registered in the system',
       route: '/admin/users',
-      icon: '👥',
+      icon: <IconUsers />,
       color: '#6366F1'
     },
     {
@@ -48,7 +49,7 @@ function AdminDashboard() {
       value: loading ? '—' : usersWithQuizzes,
       subtitle: 'Have taken at least one quiz',
       route: '/admin/assessments',
-      icon: '📝',
+      icon: <IconClipboardList />,
       color: '#10B981'
     },
     {
@@ -56,7 +57,7 @@ function AdminDashboard() {
       value: loading ? '—' : totalAssessments,
       subtitle: 'Proficiency tests completed',
       route: '/admin/assessments',
-      icon: '✓',
+      icon: <IconCheckCircle />,
       color: '#F59E0B'
     }
   ]
@@ -91,7 +92,7 @@ function AdminDashboard() {
               onClick={() => navigate(card.route)}
               whileHover={{ scale: 1.02, y: -4 }}
             >
-              <div className="admin-stat-icon" style={{ background: `${card.color}20` }}>
+              <div className="admin-stat-icon" style={{ background: `${card.color}20`, color: card.color }}>
                 {card.icon}
               </div>
               <div className="admin-stat-content">

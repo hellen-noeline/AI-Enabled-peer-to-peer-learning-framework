@@ -194,3 +194,21 @@ a {
   outline-offset: 2px;
 }
 
+/* In-app icons (replacing emoji) */
+.app-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.btn-icon.app-icon {
+  width: 1em;
+  height: 1em;
+  margin-right: 0.35em;
+}
+.inline-check.app-icon {
+  width: 1em;
+  height: 1em;
+  margin-right: 0.25em;
+  vertical-align: -0.15em;
+}
+

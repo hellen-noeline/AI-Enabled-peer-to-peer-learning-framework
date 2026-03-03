@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useStudy } from '../contexts/StudyContext'
 import Navigation from '../components/Navigation'
+import { IconCheck } from '../components/Icons'
 import { resourceToField, categoryToField, learningFields } from '../data/quizData'
 import { learningResources } from '../data/learningResources'
 import '../styles/LearningResources.css'
@@ -22,21 +23,28 @@ function LearningResources() {
   const [selectedCategory, setSelectedCategory] = useState('all')
 
   const interestToCategory = {
-    Law: 'law', 'Business & Management': 'business',
+    Law: 'law', 'Business & Management': 'business', 'Education': 'education',
+    'Humanities': 'humanities', 'Health': 'health', 'Agriculture': 'agriculture',
     'Contract Law': 'law', 'Constitutional Law': 'law', 'Criminal Law': 'law',
     'International Law': 'law', 'Legal Writing': 'law', 'Human Rights': 'law', 'Commercial Law': 'law',
     'Accounting & Finance': 'business', 'Economics': 'business', 'Marketing': 'business',
     'Human Resources': 'business', 'Entrepreneurship': 'business', 'Supply Chain & Logistics': 'business', 'Hospitality & Tourism': 'business'
+  }
+  const courseAreaToCategory = {
+    'Law': 'law', 'Business & Management': 'business', 'Education': 'education',
+    'Humanities': 'humanities', 'Health': 'health', 'Agriculture': 'agriculture',
+    'Computing & IT': 'all', 'Other': 'all'
   }
   useEffect(() => {
     const area = (user?.courseArea || '').trim()
     const ordered = (user?.orderedInterests || '').split(',').map(s => s.trim()).filter(Boolean)
     const firstInterest = ordered[0] || ''
     const firstCat = interestToCategory[firstInterest]
-    if (area === 'Law' || firstInterest === 'Law' || firstCat === 'law') {
-      setSelectedCategory('law')
-    } else if (area === 'Business & Management' || firstInterest === 'Business & Management' || firstCat === 'business') {
-      setSelectedCategory('business')
+    const areaCat = courseAreaToCategory[area]
+    if (areaCat && areaCat !== 'all') {
+      setSelectedCategory(areaCat)
+    } else if (firstCat) {
+      setSelectedCategory(firstCat)
     } else if (area === 'Computing & IT' || area === 'Other') {
       setSelectedCategory('all')
     }
@@ -54,7 +62,11 @@ function LearningResources() {
     { id: 'web', name: 'Web Development' },
     { id: 'mobile', name: 'Mobile Development' },
     { id: 'law', name: 'Law' },
-    { id: 'business', name: 'Business & Management' }
+    { id: 'business', name: 'Business & Management' },
+    { id: 'education', name: 'Education' },
+    { id: 'humanities', name: 'Humanities' },
+    { id: 'health', name: 'Health' },
+    { id: 'agriculture', name: 'Agriculture' }
   ]
 
   const filteredResourcesRaw = selectedCategory === 'all'
@@ -68,7 +80,8 @@ function LearningResources() {
       'Artificial Intelligence': 'ai', 'Machine Learning': 'ml', 'Data Science': 'ds',
       'Natural Language Processing': 'nlp', 'Computer Vision': 'cv', 'Deep Learning': 'dl',
       'Cybersecurity': 'cyber', 'Web Development': 'web', 'Mobile Development': 'mobile',
-      'Law': 'law', 'Business & Management': 'business',
+      'Law': 'law', 'Business & Management': 'business', 'Education': 'education',
+      'Humanities': 'humanities', 'Health': 'health', 'Agriculture': 'agriculture',
       'Contract Law': 'law', 'Constitutional Law': 'law', 'Criminal Law': 'law',
       'International Law': 'law', 'Legal Writing': 'law', 'Human Rights': 'law', 'Commercial Law': 'law',
       'Accounting & Finance': 'business', 'Economics': 'business', 'Marketing': 'business',
@@ -185,7 +198,7 @@ function LearningResources() {
                     className={`resource-quiz-btn ${proficiency ? 'quiz-passed' : ''}`}
                     onClick={() => navigate(`/quiz/${field.id}`)}
                   >
-                    {proficiency ? `✓ ${proficiency}` : 'Take Quizzes'}
+                    {proficiency ? <><IconCheck className="inline-check" /> {proficiency}</> : 'Take Quizzes'}
                   </button>
                 )}
               </div>

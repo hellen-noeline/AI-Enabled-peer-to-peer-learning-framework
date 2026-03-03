@@ -18,7 +18,11 @@ const KEYWORDS_BY_CATEGORY = {
   web: ['web', 'javascript', 'react', 'node', 'frontend', 'backend', 'html', 'css', 'api'],
   mobile: ['mobile', 'ios', 'android', 'swift', 'kotlin', 'react native', 'flutter'],
   law: ['law', 'legal', 'contract', 'constitutional', 'criminal', 'human rights', 'litigation', 'court', 'jurisdiction'],
-  business: ['business', 'accounting', 'finance', 'economics', 'marketing', 'hr', 'human resources', 'management', 'entrepreneurship', 'hospitality', 'logistics', 'supply chain']
+  business: ['business', 'accounting', 'finance', 'economics', 'marketing', 'hr', 'human resources', 'management', 'entrepreneurship', 'hospitality', 'logistics', 'supply chain'],
+  education: ['education', 'teaching', 'curriculum', 'pedagogy', 'assessment', 'learning', 'child development', 'classroom', 'inclusive education'],
+  humanities: ['humanities', 'philosophy', 'literature', 'history', 'writing', 'critical thinking', 'academic writing', 'culture'],
+  health: ['health', 'nursing', 'medical', 'public health', 'anatomy', 'physiology', 'clinical', 'patient care', 'epidemiology'],
+  agriculture: ['agriculture', 'farming', 'crop', 'soil', 'agribusiness', 'sustainable agriculture', 'extension', 'agronomy']
 }
 
 // Map user interest/courseArea labels to resource categories (for profile-based bias)
@@ -28,6 +32,7 @@ const INTEREST_TO_CATEGORY = {
   'business & management': 'business', 'accounting & finance': 'business', 'economics': 'business',
   'marketing': 'business', 'human resources': 'business', 'entrepreneurship': 'business',
   'supply chain & logistics': 'business', 'hospitality & tourism': 'business',
+  'education': 'education', 'humanities': 'humanities', 'health': 'health', 'agriculture': 'agriculture',
   'computing & it': 'ai', 'artificial intelligence': 'ai', 'machine learning': 'ml', 'data science': 'ds',
   'natural language processing': 'nlp', 'computer vision': 'cv', 'deep learning': 'dl',
   'cybersecurity': 'cyber', 'web development': 'web', 'mobile development': 'mobile'

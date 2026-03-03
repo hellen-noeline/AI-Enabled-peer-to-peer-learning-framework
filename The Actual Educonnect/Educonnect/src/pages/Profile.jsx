@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import Navigation from '../components/Navigation'
+import { IconSave, IconEdit } from '../components/Icons'
 import { loadDataset, getDatasetUsers } from '../utils/datasetLoader'
 import '../styles/Profile.css'
 
@@ -181,7 +182,7 @@ function Profile() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {isEditing ? '💾 Save' : '✏️ Edit'}
+                {isEditing ? <><IconSave className="btn-icon" /> Save</> : <><IconEdit className="btn-icon" /> Edit</>}
               </motion.button>
             )}
           </div>

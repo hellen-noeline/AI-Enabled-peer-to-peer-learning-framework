@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useStudy } from '../contexts/StudyContext'
+import { IconSun, IconMoon } from './Icons'
 import '../styles/Navigation.css'
 
 function Navigation() {
@@ -72,7 +73,7 @@ function Navigation() {
           title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          <span className="theme-toggle-icon" aria-hidden>{theme === 'dark' ? '☀️' : '🌙'}</span>
+          <span className="theme-toggle-icon" aria-hidden>{theme === 'dark' ? <IconSun /> : <IconMoon />}</span>
         </button>
 
         <div className="nav-user">

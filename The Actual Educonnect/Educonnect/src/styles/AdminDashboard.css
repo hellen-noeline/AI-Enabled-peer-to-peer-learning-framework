@@ -60,6 +60,11 @@
   font-size: 24px;
 }
 
+.admin-stat-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
 .admin-stat-content {
   flex: 1;
 }

@@ -1,7 +1,8 @@
 /**
- * Populate the database with the Ugandan student dataset.
+ * Populate the database with the unified student dataset.
  * Run from server folder: npm run seed
- * Expects ../public/ugandan_students_dataset_1050.csv
+ * Prefers ../public/educonnect_students_unified.csv (all courses equally represented);
+ * falls back to extended then base Ugandan CSV if missing.
  */
 import { readFileSync } from 'fs'
 import path from 'path'
@@ -109,17 +110,23 @@ async function main() {
 
   let total = 0
   try {
-    // Prefer extended Ugandan dataset with degree programmes if available
+    // Prefer unified dataset (all courses equally represented)
     try {
-      total = seedDataset(db, insertStmt, 'ugandan_students_dataset_1050_extended.csv', 'ug_ext')
-      console.log('Inserted extended Ugandan dataset:', total)
-    } catch (eExt) {
-      console.warn('Extended Ugandan dataset not found, falling back to base CSV:', eExt.message)
-      total = seedDataset(db, insertStmt, 'ugandan_students_dataset_1050.csv', 'ug')
-      console.log('Inserted Ugandan dataset:', total)
+      total = seedDataset(db, insertStmt, 'educonnect_students_unified.csv', 'unified')
+      console.log('Inserted unified student dataset:', total)
+    } catch (eUnified) {
+      console.warn('Unified dataset not found, trying extended Ugandan:', eUnified.message)
+      try {
+        total = seedDataset(db, insertStmt, 'ugandan_students_dataset_1050_extended.csv', 'ug_ext')
+        console.log('Inserted extended Ugandan dataset:', total)
+      } catch (eExt) {
+        console.warn('Extended not found, falling back to base Ugandan:', eExt.message)
+        total = seedDataset(db, insertStmt, 'ugandan_students_dataset_1050.csv', 'ug')
+        console.log('Inserted Ugandan dataset:', total)
+      }
     }
   } catch (e) {
-    console.warn('Ugandan dataset not found or error:', e.message)
+    console.warn('Dataset not found or error:', e.message)
   }
 
   console.log('Total dataset_students in database:', total)

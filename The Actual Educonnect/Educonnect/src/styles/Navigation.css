@@ -115,6 +115,14 @@
 
 .theme-toggle-icon {
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .nav-user {

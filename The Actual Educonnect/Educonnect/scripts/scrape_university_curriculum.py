@@ -49,6 +49,7 @@ from bs4 import BeautifulSoup
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = BASE_DIR / "public" / "university_curriculum.json"
+FALLBACK_PATH = BASE_DIR / "public" / "curriculum_fallback.json"
 
 MAK_PROGRAMS_URL = "https://courses.mak.ac.ug/programs"
 MAK_BASE = "https://courses.mak.ac.ug"
@@ -309,6 +310,32 @@ def scrape_ucu_programmes() -> List[Dict[str, Any]]:
     return programmes
 
 
+def merge_fallback(all_entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Merge in static fallback programmes so Law, Business, Computing, etc. are all represented."""
+    if not FALLBACK_PATH.exists():
+        return all_entries
+    seen = {(e.get("university", "").lower(), (e.get("course") or "").strip().lower()) for e in all_entries}
+    with FALLBACK_PATH.open("r", encoding="utf-8") as f:
+        fallback = json.load(f)
+    for entry in fallback:
+        if not isinstance(entry, dict) or not entry.get("course"):
+            continue
+        u, c = (entry.get("university") or "").strip().lower(), (entry.get("course") or "").strip().lower()
+        if (u or "makerere", c) in seen:
+            continue
+        seen.add((u or "makerere", c))
+        all_entries.append({
+            "university": entry.get("university", "Makerere University"),
+            "universityLocation": "Kampala, Uganda" if "Makerere" in entry.get("university", "") else "Mukono, Uganda",
+            "universityMotto": "",
+            "college": entry.get("college", ""),
+            "course": entry.get("course", ""),
+            "duration": None,
+            "curriculum": [],
+        })
+    return all_entries
+
+
 def main() -> None:
     print("Scraping Makerere programmes and curricula...")
     mak_entries = scrape_all_mak_programmes()
@@ -317,6 +344,7 @@ def main() -> None:
     ucu_entries = scrape_ucu_programmes()
 
     all_entries: List[Dict[str, Any]] = mak_entries + ucu_entries
+    all_entries = merge_fallback(all_entries)
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_PATH.open("w", encoding="utf-8") as f:

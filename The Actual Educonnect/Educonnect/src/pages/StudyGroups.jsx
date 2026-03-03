@@ -139,42 +139,55 @@ function StudyGroups() {
     let score = 0
     let factors = 0
 
-    // Primary: unified interests (ordered + additional) — 50% weight
+    // Same degree program or same course area — 15% (tailor groups to user's field)
+    const area1 = getCourseArea(user1)
+    const area2 = getCourseArea(user2)
+    const sameArea = area1 && area2 && area1 === area2
+    const sameDegree = (user1.degreeProgram && user2.degreeProgram) &&
+      (user1.degreeProgram || '').trim().toLowerCase() === (user2.degreeProgram || '').trim().toLowerCase()
+    if (sameDegree) {
+      score += 0.15
+    } else if (sameArea) {
+      score += 0.1
+    }
+    factors += 0.15
+
+    // Primary: unified interests (ordered + additional) — 45% weight
     const u1Interests = [...parseCommaSeparated(user1.orderedInterests || ''), ...parseCommaSeparated(user1.csInterests || '')]
     const u2Interests = [...parseCommaSeparated(user2.orderedInterests || ''), ...parseCommaSeparated(user2.csInterests || '')]
     const bothHavePrimary = u1Interests.some(i => i.toLowerCase().trim() === primaryInterest) &&
       u2Interests.some(i => i.toLowerCase().trim() === primaryInterest)
-    if (bothHavePrimary) score += 0.25
+    if (bothHavePrimary) score += 0.225
     const interestOverlap = u1Interests.filter(i => u2Interests.some(i2 => i.toLowerCase().trim() === i2.toLowerCase().trim())).length
     const interestUnion = new Set([...u1Interests.map(i => i.toLowerCase()), ...u2Interests.map(i => i.toLowerCase())]).size
-    if (interestUnion > 0) score += (interestOverlap / interestUnion) * 0.25
-    factors += 0.5
+    if (interestUnion > 0) score += (interestOverlap / interestUnion) * 0.225
+    factors += 0.45
 
-    // Technical skills match (20%)
+    // Technical skills match (18%)
     const user1Tech = parseCommaSeparated(user1.technicalSkills || '')
     const user2Tech = parseCommaSeparated(user2.technicalSkills || '')
     const techIntersection = user1Tech.filter(t =>
       user2Tech.some(t2 => t.toLowerCase().trim() === t2.toLowerCase().trim())
     ).length
     const techUnion = new Set([...user1Tech, ...user2Tech]).size
-    if (techUnion > 0) score += (techIntersection / techUnion) * 0.2
-    factors += 0.2
+    if (techUnion > 0) score += (techIntersection / techUnion) * 0.18
+    factors += 0.18
 
-    // Research interests match (15%)
+    // Research interests match (12%)
     const user1Research = parseCommaSeparated(user1.researchInterests || '')
     const user2Research = parseCommaSeparated(user2.researchInterests || '')
     const researchIntersection = user1Research.filter(r =>
       user2Research.some(r2 => r.toLowerCase().trim() === r2.toLowerCase().trim())
     ).length
     const researchUnion = new Set([...user1Research, ...user2Research]).size
-    if (researchUnion > 0) score += (researchIntersection / researchUnion) * 0.15
-    factors += 0.15
+    if (researchUnion > 0) score += (researchIntersection / researchUnion) * 0.12
+    factors += 0.12
 
-    // Learning style match (10%)
+    // Learning style match (5%)
     if (user1.preferredLearningStyle && user2.preferredLearningStyle) {
-      if (user1.preferredLearningStyle === user2.preferredLearningStyle) score += 0.1
+      if (user1.preferredLearningStyle === user2.preferredLearningStyle) score += 0.05
     }
-    factors += 0.1
+    factors += 0.05
 
     // Study hours preference match (5%)
     if (user1.preferredStudyHours && user2.preferredStudyHours) {
@@ -188,6 +201,22 @@ function StudyGroups() {
   const parseCommaSeparated = (str) => {
     if (!str || typeof str !== 'string') return []
     return str.split(',').map(item => item.trim()).filter(item => item.length > 0)
+  }
+
+  // Derive course area from degree program or use profile courseArea for better group tailoring
+  const getCourseArea = (user) => {
+    const area = (user?.courseArea || '').trim()
+    if (area) return area
+    const deg = (user?.degreeProgram || '').toLowerCase()
+    if (!deg) return ''
+    if (/law|llb|legal/.test(deg)) return 'Law'
+    if (/business|bba|commerce|accounting|finance|economics|marketing|hr|hospitality|tourism|logistics/.test(deg)) return 'Business & Management'
+    if (/computing|computer|information technology|software|bit|bcs/.test(deg)) return 'Computing & IT'
+    if (/education|b\.?ed|teaching/.test(deg)) return 'Education'
+    if (/humanities|literature|philosophy|history|arts/.test(deg)) return 'Humanities'
+    if (/nursing|health|medical|medicine/.test(deg)) return 'Health'
+    if (/agriculture|agri|environmental/.test(deg)) return 'Agriculture'
+    return 'Other'
   }
 
   const getGroupSizeColor = (size) => {
