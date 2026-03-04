@@ -1,11 +1,13 @@
 /**
  * Email service using EmailJS.
- * Sends feedback confirmation to the user's email.
+ * Sends feedback confirmation and admin responses to the user's email.
  *
  * Setup required:
  * 1. Sign up at https://www.emailjs.com/
  * 2. Add an email service (Gmail, Outlook, etc.)
  * 3. Create an email template with variables: to_email, user_name, subject, message, feedback_type
+ *    IMPORTANT: Set the "To" field in your EmailJS template to {{to_email}} so the email
+ *    is sent to the recipient. Without this, emails won't reach the user.
  * 4. Add env vars to .env (see below)
  *
  * .env:
@@ -28,16 +30,17 @@ export async function sendFeedbackConfirmation({ toEmail, userName, subject, mes
   }
 
   try {
+    const templateParams = {
+      to_email: toEmail,
+      user_name: userName,
+      subject,
+      message,
+      feedback_type: feedbackType || 'General Feedback'
+    }
     await emailjs.send(
       SERVICE_ID,
       TEMPLATE_ID,
-      {
-        to_email: toEmail,
-        user_name: userName,
-        subject,
-        message,
-        feedback_type: feedbackType || 'General Feedback'
-      },
+      templateParams,
       { publicKey: PUBLIC_KEY }
     )
     return { ok: true }
@@ -52,10 +55,10 @@ export async function sendFeedbackConfirmation({ toEmail, userName, subject, mes
  * Reuses the same template: subject = "Re: " + originalSubject, message = adminResponse
  */
 export async function sendFeedbackResponseToUser({ toEmail, userName, originalSubject, adminResponse }) {
-  if (!toEmail || !userName) return { ok: false, error: 'Missing recipient email or name' }
+  if (!toEmail) return { ok: false, error: 'Missing recipient email' }
   return sendFeedbackConfirmation({
     toEmail,
-    userName,
+    userName: userName || 'User',
     subject: `Re: ${originalSubject || 'Your feedback'}`,
     message: adminResponse || '',
     feedbackType: 'Admin Response'

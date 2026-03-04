@@ -196,10 +196,24 @@ function Feedback() {
     if (!adminResponse.trim()) return
     setRespondLoading(true)
     setAdminError('')
+    const trimmed = adminResponse.trim()
+    let toEmail = feedback.userEmail || feedback.user_email
+    let userName = feedback.userName || feedback.user_name
+
+    // Fallback: look up user's email from registered users if not on feedback
+    if (!toEmail && feedback.userId) {
+      const users = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
+      const found = users.find((u) => u.id === feedback.userId)
+      if (found) {
+        toEmail = found.email
+        userName = userName || `${found.firstName || ''} ${found.lastName || ''}`.trim() || found.email
+      }
+    }
+
     try {
-      const trimmed = adminResponse.trim()
+      let updated
       try {
-        const updated = await respondToFeedbackApi(feedback.id, trimmed, user?.email)
+        updated = await respondToFeedbackApi(feedback.id, trimmed, user?.email)
         setAllFeedback((prev) => prev.map((f) => (f.id === feedback.id ? updated : f)))
         if (feedback.userId === user?.id) {
           setMyFeedback((prev) => prev.map((f) => (f.id === feedback.id ? updated : f)))
@@ -211,13 +225,24 @@ function Feedback() {
           respondedAt: new Date().toISOString()
         }
         updateFeedbackInStorage(feedback.id, updates)
-        await sendFeedbackResponseToUser({
-          toEmail: feedback.userEmail,
-          userName: feedback.userName,
+        updated = { ...feedback, ...updates }
+      }
+
+      // Always send admin response to the user's email
+      if (toEmail) {
+        const emailResult = await sendFeedbackResponseToUser({
+          toEmail,
+          userName,
           originalSubject: feedback.subject,
           adminResponse: trimmed
         })
+        if (!emailResult.ok) {
+          setAdminError(`Response saved. Email could not be sent: ${emailResult.error || 'EmailJS not configured'}. Add VITE_EMAILJS_* to .env`)
+        }
+      } else {
+        setAdminError('Response saved. User email not found—could not send email.')
       }
+
       setRespondingTo(null)
       setAdminResponse('')
     } catch (err) {
@@ -292,6 +317,9 @@ function Feedback() {
                       <>
                         {respondingTo === feedback.id ? (
                           <div className="respond-form">
+                            <p className="respond-email-hint">
+                              Your response will be sent to <strong>{feedback.userEmail || feedback.user_email || 'user'}</strong>
+                            </p>
                             <textarea
                               value={adminResponse}
                               onChange={(e) => setAdminResponse(e.target.value)}

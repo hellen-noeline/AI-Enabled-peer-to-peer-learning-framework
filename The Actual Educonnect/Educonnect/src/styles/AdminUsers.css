@@ -30,6 +30,13 @@
   margin-bottom: var(--spacing-md);
 }
 
+.admin-users-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
 .admin-users-header .back-link {
   color: var(--primary);
   font-weight: 600;
@@ -39,6 +46,27 @@
 
 .admin-users-header .back-link:hover {
   text-decoration: underline;
+}
+
+.admin-users-refresh {
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light, rgba(59, 130, 246, 0.15));
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.admin-users-refresh:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+}
+
+.admin-users-refresh:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .admin-users-loading {

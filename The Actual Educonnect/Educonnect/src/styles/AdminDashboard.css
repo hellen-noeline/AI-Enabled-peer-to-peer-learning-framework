@@ -37,17 +37,15 @@
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-xl);
-  background: var(--glass-bg);
-  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
   cursor: pointer;
-  transition: all 0.25s;
+  transition: box-shadow 0.2s;
 }
 
 .admin-stat-card:hover {
-  border-color: var(--primary);
-  box-shadow: var(--glow-soft);
+  box-shadow: var(--shadow-lg);
 }
 
 .admin-stat-icon {
@@ -58,11 +56,6 @@
   align-items: center;
   justify-content: center;
   font-size: 24px;
-}
-
-.admin-stat-icon svg {
-  width: 28px;
-  height: 28px;
 }
 
 .admin-stat-content {
@@ -109,17 +102,17 @@
 
 .admin-action-card {
   padding: var(--spacing-xl);
-  background: var(--glass-bg);
-  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
   cursor: pointer;
-  transition: all 0.25s;
+  transition: all 0.2s;
+  border: 2px solid transparent;
 }
 
 .admin-action-card:hover {
   border-color: var(--primary);
-  box-shadow: var(--glow-soft);
+  box-shadow: var(--shadow-lg);
 }
 
 .admin-action-card h3 {
@@ -141,11 +134,127 @@
   color: var(--primary);
 }
 
+.admin-users-section {
+  margin-top: var(--spacing-2xl);
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow);
+}
+
+.admin-users-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.admin-users-section-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.admin-view-all-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  background: transparent;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-view-all-btn:hover {
+  background: var(--primary-light);
+}
+
+.admin-users-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.admin-users-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: admin-spin 0.8s linear infinite;
+}
+
+@keyframes admin-spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-users-empty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.admin-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.admin-user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--divider);
+  border-radius: var(--radius);
+}
+
+.admin-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-user-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.admin-user-email {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.admin-user-role {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+}
+
+.admin-user-role.admin {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.admin-user-role.user {
+  background: var(--divider);
+  color: var(--text-secondary);
+}
+
 .admin-nav .nav-logo span {
   font-weight: 700;
 }
 
 .admin-avatar {
-  background: var(--primary);
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
   color: white;
 }

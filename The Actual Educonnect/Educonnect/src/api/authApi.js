@@ -46,7 +46,7 @@ export async function signupApi(userData) {
       body: JSON.stringify(userData)
     })
   } catch (err) {
-    throw wrapNetworkError(err, 'sign up')
+    throw wrapNetworkError(err)
   }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -74,14 +74,19 @@ export async function loginApi(email, password) {
 }
 
 export async function getAdminUsersApi(adminEmail) {
-  const res = await fetch(`${API_BASE}/api/admin/users`, {
-    headers: { 'X-User-Email': adminEmail }
-  })
+  let res
+  try {
+    res = await fetch(`${API_BASE}/api/admin/users`, {
+      headers: { 'X-User-Email': adminEmail }
+    })
+  } catch (err) {
+    throw wrapNetworkError(err)
+  }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     throw new Error(data.error || 'Failed to fetch users')
   }
-  return data.users
+  return Array.isArray(data.users) ? data.users : []
 }
 
 export function updateUserApi(userId, updates) {

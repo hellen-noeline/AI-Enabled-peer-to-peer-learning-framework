@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { getAdminUsersApi } from '../api/authApi'
 import AdminNavigation from '../components/AdminNavigation'
-import { IconUsers, IconClipboardList, IconCheckCircle } from '../components/Icons'
 import '../styles/AdminDashboard.css'
 
 function AdminDashboard() {
@@ -15,9 +14,13 @@ function AdminDashboard() {
 
   useEffect(() => {
     if (!isAdmin || !user?.email) return
+    setLoading(true)
     getAdminUsersApi(user.email)
-      .then(setUsers)
-      .catch(() => setUsers([]))
+      .then((list) => setUsers(Array.isArray(list) ? list : []))
+      .catch(() => {
+        const stored = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
+        setUsers(Array.isArray(stored) ? stored : [])
+      })
       .finally(() => setLoading(false))
   }, [isAdmin, user?.email])
 
@@ -41,7 +44,7 @@ function AdminDashboard() {
       value: loading ? '—' : totalUsers,
       subtitle: 'Registered in the system',
       route: '/admin/users',
-      icon: <IconUsers />,
+      icon: '👥',
       color: '#6366F1'
     },
     {
@@ -49,7 +52,7 @@ function AdminDashboard() {
       value: loading ? '—' : usersWithQuizzes,
       subtitle: 'Have taken at least one quiz',
       route: '/admin/assessments',
-      icon: <IconClipboardList />,
+      icon: '📝',
       color: '#10B981'
     },
     {
@@ -57,7 +60,7 @@ function AdminDashboard() {
       value: loading ? '—' : totalAssessments,
       subtitle: 'Proficiency tests completed',
       route: '/admin/assessments',
-      icon: <IconCheckCircle />,
+      icon: '✓',
       color: '#F59E0B'
     }
   ]
@@ -93,7 +96,7 @@ function AdminDashboard() {
               onClick={() => navigate(card.route)}
               whileHover={{ scale: 1.02, y: -4 }}
             >
-              <div className="admin-stat-icon" style={{ background: `${card.color}20`, color: card.color }}>
+              <div className="admin-stat-icon" style={{ background: `${card.color}20` }}>
                 {card.icon}
               </div>
               <div className="admin-stat-content">
@@ -131,6 +134,47 @@ function AdminDashboard() {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+
+        {/* Users list - visible directly on dashboard when admin logs in */}
+        <motion.div
+          className="admin-users-section"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="admin-users-section-header">
+            <h2>All Users in the System</h2>
+            <button
+              type="button"
+              className="admin-view-all-btn"
+              onClick={() => navigate('/admin/users')}
+            >
+              View full list →
+            </button>
+          </div>
+          {loading ? (
+            <div className="admin-users-loading">
+              <div className="admin-users-spinner" />
+              <p>Loading users...</p>
+            </div>
+          ) : users.length === 0 ? (
+            <p className="admin-users-empty">No users have signed up yet.</p>
+          ) : (
+            <div className="admin-users-list">
+              {users.map((u) => (
+                <div key={u.id} className="admin-user-row">
+                  <div className="admin-user-info">
+                    <span className="admin-user-name">{u.firstName} {u.lastName}</span>
+                    <span className="admin-user-email">{u.email}</span>
+                  </div>
+                  <span className={`admin-user-role ${u.role === 'admin' ? 'admin' : 'user'}`}>
+                    {u.role}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

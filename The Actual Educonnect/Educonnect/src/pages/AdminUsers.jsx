@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
@@ -12,15 +12,31 @@ function AdminUsers() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const loadUsers = useCallback(() => {
     if (!isAdmin || !user?.email) return
     setLoading(true)
     setError('')
     getAdminUsersApi(user.email)
-      .then(setUsers)
-      .catch((err) => setError(err.message || 'Failed to load users'))
+      .then((list) => {
+        setUsers(Array.isArray(list) ? list : [])
+        setError('')
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to load users')
+        // Fallback: show users from localStorage when backend is unreachable
+        const stored = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
+        const fallback = Array.isArray(stored) ? stored : []
+        setUsers(fallback)
+        if (fallback.length > 0) {
+          setError('Backend unreachable. Showing users from this device. Start the backend for full data.')
+        }
+      })
       .finally(() => setLoading(false))
   }, [isAdmin, user?.email])
+
+  useEffect(() => {
+    loadUsers()
+  }, [loadUsers])
 
   if (!isAdmin) {
     return (
@@ -60,8 +76,13 @@ function AdminUsers() {
       >
         <div className="admin-users-header">
           <h1>Registered Users</h1>
-          <p>All users who have signed up for EduConnect</p>
-          <Link to="/admin/dashboard" className="back-link">← Dashboard</Link>
+          <p>All users who have signed up and are stored in the database</p>
+          <div className="admin-users-header-actions">
+            <Link to="/admin/dashboard" className="back-link">← Dashboard</Link>
+            <button type="button" className="admin-users-refresh" onClick={loadUsers} disabled={loading}>
+              {loading ? 'Loading…' : 'Refresh list'}
+            </button>
+          </div>
         </div>
 
         {loading && (
@@ -74,7 +95,7 @@ function AdminUsers() {
         {error && (
           <div className="admin-users-error">
             {error}
-            <small>Make sure the backend is running (python app.py in the backend folder)</small>
+            <small>Start the backend: cd backend, then run: pip install -r requirements.txt &amp; python app.py</small>
           </div>
         )}
 

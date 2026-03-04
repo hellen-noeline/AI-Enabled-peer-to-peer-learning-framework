@@ -1,7 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { ThemeProvider } from './contexts/ThemeContext'
 import { StudyProvider } from './contexts/StudyContext'
 import { NLPProvider } from './contexts/NLPContext'
 import { LearningFieldsProvider } from './contexts/LearningFieldsContext'
@@ -24,7 +23,6 @@ import StudyGroups from './pages/StudyGroups'
 import GroupChat from './pages/GroupChat'
 import PersonalChat from './pages/PersonalChat'
 import WelcomeMessage from './components/WelcomeMessage'
-import AtlasBot from './components/AtlasBot'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -215,12 +213,7 @@ function AppRoutes() {
         />
         <Route path="/" element={<Navigate to={user ? (user.role === 'admin' ? '/admin/dashboard' : '/dashboard') : '/login'} replace />} />
       </Routes>
-      {user && !isAuthPage && (
-        <>
-          <AudioReader />
-          <AtlasBot />
-        </>
-      )}
+      {user && !isAuthPage && <AudioReader />}
     </>
   )
 }
@@ -241,11 +234,9 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 
