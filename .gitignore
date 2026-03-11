@@ -1,0 +1,22 @@
+# Large ML model files (over 100 MB)
+*.safetensors
+**/backend/models/
+
+# Virtual environments – do not push
+.venv/
+venv/
+env/
+*.pyc
+__pycache__/
+
+# Environment variables (never commit keys)
+.env
+.env.local
+.env.example
+
+# OS and editor
+.DS_Store
+Untitled
+Thumbs.db
+.idea/
+.vscode/

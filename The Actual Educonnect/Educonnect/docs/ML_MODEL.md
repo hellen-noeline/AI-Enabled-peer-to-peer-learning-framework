@@ -61,3 +61,21 @@ python scripts/train_next_topic_model.py
 ```
 
 No server restart is strictly required if the server re-reads `model_export.json` on each request (current implementation caches it in memory; restart to load a new file, or add a file-watcher / cache-bust if needed).
+ 
+We used logistic regression because it a classification problem
+
+User Data (SQLite)
+        ↓
+Feature Engineering
+        ↓
+Train Logistic Regression (Python)
+        ↓
+Export Model Weights (JSON)
+        ↓
+Node.js Loads Model
+        ↓
+Softmax Prediction
+        ↓
+Recommended Study Topic
+        ↓
+Dashboard Displays Suggestion

@@ -1,6 +1,6 @@
 /**
- * EduBot chat API – system help, navigation, resources, issue resolution.
- * Uses optional NLP (Python) for semantic intent + keyword fallback. Polite out-of-scope response.
+ * EduBot chat API – hybrid: intent + keyword first, LLM fallback when out of scope.
+ * Uses optional NLP (Python) for semantic intent + keyword fallback; OpenAI (or compatible) for open-ended questions.
  */
 
 import express from 'express'
@@ -10,6 +10,13 @@ const router = express.Router()
 
 const ATLAS_NLP_URL = process.env.ATLAS_NLP_URL || process.env.BERTOPIC_API || 'http://localhost:5001'
 const NLP_TIMEOUT_MS = 4000
+
+// Hybrid: LLM fallback when no intent matches (optional; set OPENAI_API_KEY to enable)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
+const LLM_TIMEOUT_MS = 10000
+const EDUCONNECT_SYSTEM_PROMPT = `You are EduConnect's in-app assistant. You help students with study, courses, and using the app.
+Answer briefly and helpfully (under 120 words). If the user asks about app features (dashboard, resources, partners, groups, quizzes, feedback, profile, analytics), suggest they use those and mention they can use the buttons below. Don't invent features. For study tips or general learning questions, give short practical advice. If unsure or off-topic, politely suggest they try the Dashboard or Feedback. Reply in plain text; you can use **bold** for emphasis.`
 
 // System map: routes and features EduBot can reference
 const SYSTEM_MAP = {
@@ -455,6 +462,45 @@ function getReplyFromKeywordHandlers(message) {
   )
 }
 
+/**
+ * Hybrid: call OpenAI (or compatible) API for a generative reply when intent/keyword didn't match.
+ * Returns generated text or null on missing key, error, or timeout. No new dependencies (uses fetch).
+ */
+async function getLLMReply(message) {
+  if (!OPENAI_API_KEY || !message || typeof message !== 'string') return null
+  const trimmed = message.trim()
+  if (!trimmed) return null
+
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS)
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: 'system', content: EDUCONNECT_SYSTEM_PROMPT },
+          { role: 'user', content: trimmed }
+        ],
+        max_tokens: 200,
+        temperature: 0.6
+      }),
+      signal: controller.signal
+    })
+    clearTimeout(timeout)
+    if (!res.ok) return null
+    const data = await res.json()
+    const text = data.choices?.[0]?.message?.content?.trim()
+    return text || null
+  } catch (_) {
+    return null
+  }
+}
+
 async function getReplyWithNLP(message) {
   if (!message || typeof message !== 'string') {
     return {
@@ -492,7 +538,13 @@ async function getReplyWithNLP(message) {
   const keywordReply = getReplyFromKeywordHandlers(message)
   if (keywordReply) return keywordReply
 
-  return getOutOfScopeReply(message, nlpIntent, nlpConfidence)
+  // Hybrid: LLM fallback when out of scope (if OPENAI_API_KEY is set)
+  const outOfScope = getOutOfScopeReply(message, nlpIntent, nlpConfidence)
+  const llmText = await getLLMReply(message)
+  if (llmText) {
+    return { text: llmText, actions: outOfScope.actions }
+  }
+  return outOfScope
 }
 
 router.post('/', async (req, res) => {

@@ -1,0 +1,26 @@
+{
+    "run_name": "2026-03-11",
+    "staged_at": "2026-03-11T19:24:51.388521",
+    "inputs": {
+        "raw_folder": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\raw\\2026-03-11",
+        "students_file": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\raw\\2026-03-11\\students\\ugandan_students_dataset_1050.csv",
+        "curriculum_files": [
+            "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\raw\\2026-03-11\\curriculum\\university_curriculum.json",
+            "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\raw\\2026-03-11\\curriculum\\curriculum_fallback.json"
+        ]
+    },
+    "outputs": {
+        "students": {
+            "input_rows": 1050,
+            "output_rows": 1050,
+            "dropped_rows": 0,
+            "output_file": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\staging\\2026-03-11\\students\\students_clean.csv"
+        },
+        "programmes": {
+            "input_rows": 47,
+            "output_rows": 43,
+            "dropped_rows": 4,
+            "output_file": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\staging\\2026-03-11\\curriculum\\programmes_clean.csv"
+        }
+    }
+}

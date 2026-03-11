@@ -1,0 +1,44 @@
+university,college,course,source_file
+Uganda Christian University,School Of Business And Administration,Diploma Of Business Administration,university_curriculum.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Business Administration,university_curriculum.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Human Resource Management,university_curriculum.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Tourism & Hospitality Management,university_curriculum.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Procurement & Logistic Management,university_curriculum.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Science In Accounting & Finance,university_curriculum.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Science In Economics And Statistics,university_curriculum.json
+Makerere University,College Of Computing And Information Sciences,Bachelor Of Information Technology,curriculum_fallback.json
+Makerere University,College Of Computing And Information Sciences,Bachelor Of Computer Science,curriculum_fallback.json
+Makerere University,College Of Computing And Information Sciences,Bachelor Of Science In Software Engineering,curriculum_fallback.json
+Makerere University,College Of Computing And Information Sciences,Bachelor Of Science In Computer Engineering,curriculum_fallback.json
+Makerere University,College Of Business And Management Sciences,Bachelor Of Business Administration,curriculum_fallback.json
+Makerere University,College Of Business And Management Sciences,Bachelor Of Commerce,curriculum_fallback.json
+Makerere University,College Of Business And Management Sciences,Bachelor Of Science In Accounting,curriculum_fallback.json
+Makerere University,College Of Business And Management Sciences,Bachelor Of Science In Finance,curriculum_fallback.json
+Makerere University,College Of Business And Management Sciences,Bachelor Of Science In Economics,curriculum_fallback.json
+Makerere University,College Of Business And Management Sciences,Bachelor Of Tourism,curriculum_fallback.json
+Makerere University,School Of Law,Bachelor Of Laws (Llb),curriculum_fallback.json
+Makerere University,College Of Education And External Studies,Bachelor Of Education (Arts),curriculum_fallback.json
+Makerere University,College Of Education And External Studies,Bachelor Of Education (Science),curriculum_fallback.json
+Makerere University,College Of Humanities And Social Sciences,Bachelor Of Arts In Social Sciences,curriculum_fallback.json
+Makerere University,College Of Humanities And Social Sciences,Bachelor Of Arts In Literature,curriculum_fallback.json
+Makerere University,College Of Health Sciences,Bachelor Of Nursing,curriculum_fallback.json
+Makerere University,College Of Agricultural And Environmental Sciences,Bachelor Of Science In Agriculture,curriculum_fallback.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Science In Accounting And Finance,curriculum_fallback.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Tourism And Hospitality Management,curriculum_fallback.json
+Uganda Christian University,School Of Business And Administration,Bachelor Of Procurement And Logistics Management,curriculum_fallback.json
+Uganda Christian University,School Of Law,Bachelor Of Laws (Llb),curriculum_fallback.json
+Uganda Christian University,School Of Law,Diploma In Law,curriculum_fallback.json
+Uganda Christian University,Faculty Of Engineering And Technology,Bachelor Of Science In Computer Science,curriculum_fallback.json
+Uganda Christian University,Faculty Of Engineering And Technology,Bachelor Of Science In Information Technology,curriculum_fallback.json
+Uganda Christian University,School Of Education,Bachelor Of Education (Primary),curriculum_fallback.json
+Uganda Christian University,School Of Education,Bachelor Of Education (Secondary),curriculum_fallback.json
+Uganda Christian University,Bishop Tucker School Of Theology,Bachelor Of Divinity,curriculum_fallback.json
+Kyambogo University,Faculty Of Engineering,Bachelor Of Science In Computer Engineering,curriculum_fallback.json
+Kyambogo University,Faculty Of Education,Bachelor Of Education (Arts),curriculum_fallback.json
+Kyambogo University,Faculty Of Business And Management,Bachelor Of Business Administration,curriculum_fallback.json
+Mbarara University Of Science And Technology,Faculty Of Computing And Informatics,Bachelor Of Computer Science,curriculum_fallback.json
+Mbarara University Of Science And Technology,Faculty Of Business And Management,Bachelor Of Business Administration,curriculum_fallback.json
+Gulu University,Faculty Of Business And Development Studies,Bachelor Of Business Administration,curriculum_fallback.json
+Gulu University,Faculty Of Law,Bachelor Of Laws (Llb),curriculum_fallback.json
+Busitema University,Faculty Of Engineering,Bachelor Of Science In Computer Engineering,curriculum_fallback.json
+Busitema University,Faculty Of Natural Resources,Bachelor Of Science In Agriculture,curriculum_fallback.json

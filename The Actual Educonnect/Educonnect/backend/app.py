@@ -1,22 +1,37 @@
 """
 BERTopic API + User database for EduConnect.
 Run: python app.py
+Optional: put Colab-trained intent model in backend/models/intent to use it for AtlasBot.
 """
 
+import os
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-from bertopic import BERTopic
-from sentence_transformers import SentenceTransformer
+from flask_cors import CORS  ## cross-origin resource sharing......connects front end and backend even if on other ports
+from bertopic import BERTopic  ##An ML modelgroups documents into topics and reads texts
+from sentence_transformers import SentenceTransformer  ##embeds text into a vector space
+##Vectors allow 
 
+##These functions come from the database and run different database functions
 from database import init_db, get_user_by_email, get_all_users, create_user, update_user, get_user_by_id, merge_user_profile
+
+# Path to Colab-trained intent model (download from Drive/Desktop and place here to use it)
+# Supports: backend/models/intent, backend/models/intent_advanced, or env TRAINED_INTENT_MODEL_DIR
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def _default_intent_model_dir():
+    for name in ("intent", "intent_advanced"):
+        path = os.path.join(BASE_DIR, "models", name)
+        if os.path.exists(os.path.join(path, "config.json")):
+            return path
+    return os.path.join(BASE_DIR, "models", "intent")
+TRAINED_INTENT_MODEL_DIR = os.environ.get("TRAINED_INTENT_MODEL_DIR") or _default_intent_model_dir()
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
 
-# Emails that have admin role
+# List of users who have admin previledges
 ADMIN_EMAILS = ['admin@educonnect.com']
 
-##
+
 def is_admin_email(email):
     if not email:
         return False
@@ -33,6 +48,7 @@ def require_admin():
     return True, None
 
 # Lazy-load model (DistilBERT embeddings for BERTopic)
+##Initially models are not loaded because they ar heavy only loaded when needed.
 _model = None
 _topic_model = None
 
@@ -163,6 +179,39 @@ ATLAS_INTENT_PHRASES = {
 _embedding_model = None
 _intent_embeddings = None  # list of (intent_id, phrase, embedding) or pre-aggregated per intent
 
+# Trained intent classifier from Colab notebook (optional)
+_intent_tokenizer = None
+_intent_model = None
+_trained_intent_available = None
+
+
+def _trained_intent_ready():
+    """True if the Colab-trained model files exist and we can load them."""
+    global _trained_intent_available
+    if _trained_intent_available is not None:
+        return _trained_intent_available
+    config_path = os.path.join(TRAINED_INTENT_MODEL_DIR, "config.json")
+    _trained_intent_available = os.path.exists(config_path)
+    return _trained_intent_available
+
+
+def get_trained_intent_model():
+    """Lazy-load the Colab-trained intent classifier. Returns (tokenizer, model) or (None, None)."""
+    global _intent_tokenizer, _intent_model
+    if not _trained_intent_ready():
+        return None, None
+    if _intent_model is not None:
+        return _intent_tokenizer, _intent_model
+    try:
+        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        _intent_tokenizer = AutoTokenizer.from_pretrained(TRAINED_INTENT_MODEL_DIR)
+        _intent_model = AutoModelForSequenceClassification.from_pretrained(TRAINED_INTENT_MODEL_DIR)
+        _intent_model.eval()
+        return _intent_tokenizer, _intent_model
+    except Exception as e:
+        print(f"[AtlasBot] Trained intent model load failed: {e}. Using embedding fallback.")
+        return None, None
+
 
 def get_embedding_model():
     global _embedding_model
@@ -194,11 +243,31 @@ def cosine_similarity(a, b):
     return float(np.clip(n, -1, 1))
 
 
+def _predict_intent_trained(message):
+    """Use Colab-trained classifier if loaded. Returns (intent, confidence) or (None, None)."""
+    tokenizer, model = get_trained_intent_model()
+    if tokenizer is None or model is None:
+        return None, None
+    try:
+        import torch
+        inputs = tokenizer(message, return_tensors="pt", padding=True, truncation=True, max_length=128)
+        with torch.no_grad():
+            logits = model(**inputs).logits
+        pred_id = logits.argmax(dim=-1).item()
+        probs = torch.softmax(logits, dim=-1)[0]
+        confidence = float(probs[pred_id])
+        id2label = getattr(model.config, "id2label", {}) or {}
+        intent = id2label.get(pred_id) or id2label.get(str(pred_id)) or str(pred_id)
+        return intent, confidence
+    except Exception:
+        return None, None
+
+
 @app.route("/api/nlp/atlas-intent", methods=["POST"])
 def atlas_intent():
     """
-    NLP intent for AtlasBot: embed user message, match to intent phrases, return best intent + confidence.
-    Body: { "message": "..." }. Returns { "intent": "...", "confidence": 0.0-1.0 }.
+    NLP intent for AtlasBot. Uses Colab-trained classifier if present in backend/models/intent,
+    else falls back to embedding similarity. Body: { "message": "..." }. Returns { "intent": "...", "confidence": 0.0-1.0 }.
     """
     data = request.get_json() or {}
     message = (data.get("message") or "").strip()
@@ -206,6 +275,17 @@ def atlas_intent():
         return jsonify({"intent": "help", "confidence": 0.0})
 
     try:
+        # Prefer trained model from Colab if available
+        best_intent, confidence = _predict_intent_trained(message)
+        if best_intent is not None and confidence is not None:
+            if confidence < 0.35:
+                best_intent = "out_of_scope"
+            return jsonify({
+                "intent": best_intent,
+                "confidence": round(confidence, 4)
+            })
+
+        # Fallback: embedding similarity (no trained model or load failed)
         model = get_embedding_model()
         intent_list = get_intent_embeddings()
         query_emb = model.encode(message, convert_to_numpy=True)
@@ -219,7 +299,6 @@ def atlas_intent():
                 best_score = score
                 best_intent = intent_id
 
-        # Require minimum confidence so random text doesn't match "hello"
         confidence = float(best_score)
         if confidence < 0.35:
             best_intent = "out_of_scope"
@@ -356,4 +435,5 @@ def api_patch_user(user_id):
 #
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host="0.0.0.0", port=port)

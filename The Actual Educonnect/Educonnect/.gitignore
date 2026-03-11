@@ -12,9 +12,21 @@ dist
 dist-ssr
 *.local
 
-# Environment variables
+# Large ML model files (over 100 MB – use Drive or Git LFS to share)
+*.safetensors
+backend/models/
+
+# Virtual environments (do not push)
+.venv
+venv
+env
+*.pyc
+__pycache__
+
+# Environment variables (never commit keys)
 .env
 .env.local
+.env.example
 .env.development.local
 .env.test.local
 .env.production.local

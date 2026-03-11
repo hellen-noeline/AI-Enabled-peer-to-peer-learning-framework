@@ -1,5 +1,9 @@
 # Data pipeline: unified student dataset
 
+##EduConnect uses a batch ETL data pipeline that gathers programme data, combines it with a base student dataset, generates a balanced unified CSV of students per programme, seeds it into the backend database and serves it to the application with CSV fallback support.
+
+### Data Pipeline: Ingestion → Transformation → Generation → Storage → Serving
+
 EduConnect uses a **single unified student dataset** so that Computing, Law, Business, Education, and other courses are **equally represented**.
 
 ## Steps

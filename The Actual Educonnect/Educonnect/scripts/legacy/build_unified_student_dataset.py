@@ -13,6 +13,8 @@ The app and seed then use this single file for dataset_students and CSV fallback
 
 Run from Educonnect root:
   python scripts/build_unified_student_dataset.py
+
+  TO BE DELETED IF GROUP AGREES
 """
 
 import csv

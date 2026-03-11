@@ -1,0 +1,29 @@
+[
+    {
+        "file_name": "ugandan_students_dataset_1050.csv",
+        "category": "students",
+        "source_path": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\public\\ugandan_students_dataset_1050.csv",
+        "raw_path": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\raw\\2026-03-11\\students\\ugandan_students_dataset_1050.csv",
+        "ingested_at": "2026-03-11T19:12:00.785609",
+        "file_size_bytes": 609968,
+        "record_count": 1050
+    },
+    {
+        "file_name": "university_curriculum.json",
+        "category": "curriculum",
+        "source_path": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\public\\university_curriculum.json",
+        "raw_path": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\raw\\2026-03-11\\curriculum\\university_curriculum.json",
+        "ingested_at": "2026-03-11T19:12:00.785609",
+        "file_size_bytes": 2276,
+        "record_count": 7
+    },
+    {
+        "file_name": "curriculum_fallback.json",
+        "category": "curriculum",
+        "source_path": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\public\\curriculum_fallback.json",
+        "raw_path": "C:\\Users\\HP PC\\Desktop\\Peertopeer\\AI-Enabled-peer-to-peer-learning-framework\\The Actual Educonnect\\Educonnect\\data\\raw\\2026-03-11\\curriculum\\curriculum_fallback.json",
+        "ingested_at": "2026-03-11T19:12:00.801236",
+        "file_size_bytes": 5687,
+        "record_count": 40
+    }
+]
