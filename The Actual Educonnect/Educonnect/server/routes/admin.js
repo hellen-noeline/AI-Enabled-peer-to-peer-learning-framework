@@ -1,3 +1,8 @@
+// Provides a secure api that enables admins view all the user lists.
+//Admin sends request → Server checks admin email → 
+// Server verifies admin role in database → 
+// Server retrieves all users → Server formats the user data → 
+// Server returns the list of users as JSON
 import { Router } from 'express'
 
 const router = Router()

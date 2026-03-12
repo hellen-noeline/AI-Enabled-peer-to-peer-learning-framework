@@ -1,3 +1,27 @@
+/*
+This file defines the feedback routes for the application using Express.
+
+Its main purpose is to handle the full feedback workflow between users and admins.
+The code allows users to submit feedback, view their own feedback, and lets admins
+view all feedback entries and respond to them.
+
+Main logic of the file:
+1. A user submits feedback, which is saved into the feedback table in the database.
+2. The feedback can include details such as type, subject, message, rating,
+   and optional sentiment analysis information.
+3. A user can later request to see only the feedback they personally submitted.
+4. An admin can request to see all feedback in the system.
+5. An admin can respond to a specific feedback entry.
+6. When the admin responds, the feedback status is updated to resolved,
+   the admin's response is stored, the response time is recorded,
+   and an email notification can be sent to the user.
+
+The helper function rowToFeedback() is used to convert raw database rows
+into cleaner JavaScript objects with frontend-friendly field names.
+
+Overall, this file acts as the backend controller for collecting,
+retrieving, managing, and resolving user feedback.
+*/
 import { Router } from 'express'
 import { randomUUID } from 'crypto'
 import { sendFeedbackResponseEmail } from '../emailService.js'

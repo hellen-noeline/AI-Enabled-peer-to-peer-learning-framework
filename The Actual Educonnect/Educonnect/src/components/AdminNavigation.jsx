@@ -18,6 +18,7 @@ function AdminNavigation() {
     { path: '/admin/dashboard', label: 'Dashboard' },
     { path: '/admin/users', label: 'Users' },
     { path: '/admin/assessments', label: 'Quiz Assessments' },
+    { path: '/admin/quiz-generate', label: 'Generate Quizzes' },
     { path: '/feedback', label: 'Feedback' }
   ]
 

@@ -1,44 +1,73 @@
-# Logs
-logs
-*.log
+# === Virtual environments (do not push) ===
+.venv/
+venv/
+env/
+.env/
+*.pyc
+__pycache__/
+*.pyo
+.Python
+
+# === ML / model files (large; GitHub 100MB limit) ===
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+*.joblib
+backend/models/
+**/models/*.safetensors
+**/models/*.bin
+ml_predictions.json
+model_export.json
+next_topic_model.joblib
+
+# === API keys and secrets (never commit) ===
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server/.env
+server/.env.*
+*.pem
+*.key
+
+# === Node ===
+node_modules/
+dist/
+dist-ssr/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
 *.local
 
-# Large ML model files (over 100 MB – use Drive or Git LFS to share)
-*.safetensors
-backend/models/
+# === Build / cache ===
+build/
+.cache/
+.vite/
+coverage/
 
-# Virtual environments (do not push)
-.venv
-venv
-env
-*.pyc
-__pycache__
+# === Database (local SQLite – do not push) ===
+*.db
+*.sqlite
+*.sqlite3
 
-# Environment variables (never commit keys)
-.env
-.env.local
-.env.example
-.env.development.local
-.env.test.local
-.env.production.local
+# === Logs ===
+logs/
+*.log
 
-# Editor directories and files
+# === OS and editor ===
+.DS_Store
+Thumbs.db
+.idea/
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-

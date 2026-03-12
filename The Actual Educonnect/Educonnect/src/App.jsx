@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { StudyProvider } from './contexts/StudyContext'
 import { NLPProvider } from './contexts/NLPContext'
+import { LearningFieldsProvider } from './contexts/LearningFieldsContext'
 import { AudioReader } from './components/AudioReader'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
@@ -14,6 +15,7 @@ import Feedback from './pages/Feedback'
 import AdminUsers from './pages/AdminUsers'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminQuizAssessments from './pages/AdminQuizAssessments'
+import AdminQuizGenerate from './pages/AdminQuizGenerate'
 import StudyAnalytics from './pages/StudyAnalytics'
 import LearningResources from './pages/LearningResources'
 import Quiz from './pages/Quiz'
@@ -148,6 +150,14 @@ function AppRoutes() {
           } 
         />
         <Route 
+          path="/admin/quiz-generate" 
+          element={
+            <AdminRoute>
+              <AdminQuizGenerate />
+            </AdminRoute>
+          } 
+        />
+        <Route 
           path="/analytics" 
           element={
             <StudentRoute>
@@ -216,14 +226,15 @@ function AppRoutes() {
 }
 
 function AppContent() {
-  const auth = useAuth()
   return (
     <StudyProvider>
-      <NLPProvider>
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AppRoutes />
-        </BrowserRouter>
-      </NLPProvider>
+      <LearningFieldsProvider>
+        <NLPProvider>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AppRoutes />
+          </BrowserRouter>
+        </NLPProvider>
+      </LearningFieldsProvider>
     </StudyProvider>
   )
 }

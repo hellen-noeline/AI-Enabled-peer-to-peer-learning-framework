@@ -1,3 +1,27 @@
+/*
+Authentication Router
+
+This module handles user authentication and account management for the application.
+It provides two main API endpoints:
+POST /signup – registers a new user account.
+POST /login – authenticates an existing user.
+
+It acts as a bridge between the frontend and the database by receiving requests
+from the frontend (such as signup or login forms), processing the data, interacting
+with the database to store or retrieve user information, and returning responses
+back to the frontend.
+
+For security, user passwords are encrypted before being stored. During signup,
+bcrypt.hash(password, SALT_ROUNDS) is used to generate a salted hash of the password,
+ensuring that the actual password is never stored in plain text in the database.
+
+During login, bcrypt.compare() checks whether the entered password matches the
+stored hash. If the match is successful, the user is authenticated and their
+last login time is updated.
+
+The module also assigns user roles (admin or user) based on predefined admin emails
+and converts user data between database format and application-friendly objects.
+*/
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { randomUUID } from 'crypto'

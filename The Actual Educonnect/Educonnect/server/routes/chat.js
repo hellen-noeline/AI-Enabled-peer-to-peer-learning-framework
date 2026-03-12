@@ -1,7 +1,22 @@
-/**
- * EduBot chat API – hybrid: intent + keyword first, LLM fallback when out of scope.
- * Uses optional NLP (Python) for semantic intent + keyword fallback; OpenAI (or compatible) for open-ended questions.
- */
+/*
+EduBot Chat API
+
+This module runs the backend logic of the EduBot chatbot in the EduConnect application.
+It acts as a bridge between the frontend chat interface and the backend services by
+receiving user messages, processing them, and returning chatbot replies with helpful actions.
+
+The chatbot works in a hybrid way:
+1. It first checks whether the message is related to EduConnect features or learning resources.
+2. If it is EduConnect-related, it uses the trained NLP intent model and keyword rules
+   to understand the request and return the correct app response.
+3. If the message is more general and not clearly related to EduConnect, it can send
+   the question to the LLM (OpenAI) for a broader conversational reply.
+4. It also uses the learningResources dataset to recommend courses, tutorials, and
+   study materials by topic such as AI, ML, Law, Business, and more.
+
+Overall, this file controls how the chatbot understands messages, chooses responses,
+guides users through the app, and provides both app-specific help and broader support.
+*/
 
 import express from 'express'
 import { learningResources } from '../data/learningResources.js'
@@ -15,8 +30,21 @@ const NLP_TIMEOUT_MS = 4000
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
 const LLM_TIMEOUT_MS = 10000
-const EDUCONNECT_SYSTEM_PROMPT = `You are EduConnect's in-app assistant. You help students with study, courses, and using the app.
-Answer briefly and helpfully (under 120 words). If the user asks about app features (dashboard, resources, partners, groups, quizzes, feedback, profile, analytics), suggest they use those and mention they can use the buttons below. Don't invent features. For study tips or general learning questions, give short practical advice. If unsure or off-topic, politely suggest they try the Dashboard or Feedback. Reply in plain text; you can use **bold** for emphasis.`
+const EDUCONNECT_SYSTEM_PROMPT = `You are EduConnect's in-app assistant.
+
+You help students with EduConnect features, studying, learning resources, and general helpful questions.
+
+Priorities:
+1. If the user asks about EduConnect, explain the correct feature or page clearly.
+2. If the user asks for study help, give short practical advice.
+3. If the user asks a general question, answer it directly in a useful way.
+
+Guidelines:
+- Keep answers brief, friendly, and practical.
+- Prefer under 120 words.
+- Do not invent EduConnect features.
+- For general questions like movies, motivation, or everyday advice, answer naturally.
+- Reply in plain text; **bold** is allowed.`
 
 // System map: routes and features EduBot can reference
 const SYSTEM_MAP = {
@@ -28,14 +56,14 @@ const SYSTEM_MAP = {
     { path: '/profile', name: 'Profile', description: 'Edit your profile, interests, and study preferences.' },
     { path: '/feedback', name: 'Feedback', description: 'Send feedback or report issues to the team.' },
     { path: '/analytics', name: 'Study Analytics', description: 'Charts and stats for your study time and quiz progress.' },
-    { path: '/quiz', name: 'Quizzes', description: 'Take quizzes by field (e.g. AI, ML, NLP) from the quiz hub.' }
+    { path: '/quiz', name: 'Quizzes', description: 'Take quizzes by field (e.g. AI, ML, NLP) in Learning Resources.' }
   ],
   features: [
     { id: 'timer', name: 'Study Timer', location: 'Dashboard', description: 'Start a focused study session; time is logged to your analytics.' },
     { id: 'partners', name: 'Find Partners', location: 'Find Partners', description: 'Get matched with peers by interests and fields.' },
     { id: 'groups', name: 'Study Groups', location: 'Study Groups', description: 'Join or create groups and use group chat.' },
     { id: 'resources', name: 'Learning Resources', location: 'Resources', description: 'Filter by category (AI, ML, Law, Business, web, cyber, etc.) and open external courses.' },
-    { id: 'quizzes', name: 'Quizzes', location: 'Quiz hub', description: 'Practice with quizzes per field; progress is saved.' },
+    { id: 'quizzes', name: 'Quizzes', location: 'Learning Resources', description: 'Practice with quizzes per field; progress is saved.' },
     { id: 'analytics', name: 'Analytics', location: 'Study Analytics', description: 'View study hours and quiz performance over time.' },
     { id: 'feedback', name: 'Feedback', location: 'Feedback', description: 'Submit feedback or report a problem.' }
   ],
@@ -47,7 +75,7 @@ const SYSTEM_MAP = {
     { keywords: ['partner', 'match', 'recommendation', 'study buddy', 'find someone'], path: '/recommendations', label: 'Find Partners' },
     { keywords: ['group', 'study group', 'join group', 'create group', 'group chat'], path: '/groups', label: 'Study Groups' },
     { keywords: ['resource', 'course', 'learn', 'tutorial', 'materials', 'courses', 'law', 'legal', 'business', 'accounting', 'economics'], path: '/resources', label: 'Resources' },
-    { keywords: ['quiz', 'test', 'practice', 'quiz hub', 'take a quiz'], path: '/dashboard', label: 'Dashboard (then Quiz hub)' },
+    { keywords: ['quiz', 'test', 'practice', 'take a quiz'], path: '/resources', label: 'Learning Resources' },
     { keywords: ['analytics', 'stats', 'hours', 'progress', 'statistics', 'study time'], path: '/analytics', label: 'Study Analytics' },
     { keywords: ['feedback', 'report', 'bug', 'issue', 'contact', 'complaint'], path: '/feedback', label: 'Feedback' }
   ]
@@ -96,8 +124,8 @@ const INTENT_REPLIES = {
     actions: [{ path: '/resources', label: 'Open Resources' }]
   },
   quizzes: {
-    text: '**Quizzes** are on the Dashboard (Quiz hub) or by field (e.g. AI, ML). Your progress is saved.',
-    actions: [{ path: '/dashboard', label: 'Dashboard' }]
+    text: '**Quizzes** are in **Learning Resources**—browse by topic (e.g. AI, ML) and take quizzes there. Your progress is saved.',
+    actions: [{ path: '/resources', label: 'Learning Resources' }]
   },
   analytics: {
     text: '**Study Analytics** shows your study hours and quiz progress over time.',
@@ -137,7 +165,11 @@ const CATEGORY_KEYWORDS = {
   cv: ['computer vision', 'vision', 'opencv', 'image', 'cnn'],
   mobile: ['mobile', 'android', 'ios', 'swift', 'kotlin', 'flutter', 'app development'],
   law: ['law', 'legal', 'contract', 'constitutional', 'criminal', 'human rights', 'litigation', 'court', 'jurisdiction', 'commercial law', 'legal writing', 'international law'],
-  business: ['business', 'accounting', 'finance', 'economics', 'marketing', 'hr', 'human resources', 'management', 'entrepreneurship', 'hospitality', 'logistics', 'supply chain', 'microeconomics', 'macroeconomics']
+  business: ['business', 'accounting', 'finance', 'economics', 'marketing', 'hr', 'human resources', 'management', 'entrepreneurship', 'hospitality', 'logistics', 'supply chain', 'microeconomics', 'macroeconomics'],
+  education: ['education', 'teaching', 'curriculum', 'pedagogy', 'child development', 'assessment', 'inclusive education', 'learning'],
+  humanities: ['humanities', 'philosophy', 'literature', 'history', 'critical thinking', 'academic writing', 'culture'],
+  health: ['health', 'nursing', 'medical', 'public health', 'anatomy', 'physiology', 'epidemiology', 'healthcare', 'medicine'],
+  agriculture: ['agriculture', 'farming', 'crop', 'agribusiness', 'soil', 'sustainable agriculture', 'agronomy']
 }
 
 const CATEGORY_LABELS = {
@@ -151,17 +183,22 @@ const CATEGORY_LABELS = {
   cv: 'Computer Vision',
   mobile: 'Mobile Development',
   law: 'Law',
-  business: 'Business & Management'
+  business: 'Business & Management',
+  education: 'Education',
+  humanities: 'Humanities',
+  health: 'Health',
+  agriculture: 'Agriculture'
 }
 
 const RECOMMEND_TRIGGERS = ['recommend', 'suggest', 'give me', 'find me', 'want to learn', 'learn about', 'course on', 'tutorial for', 'best course', 'something for', 'what should i', 'content for', 'resource for', 'courses for', 'learning material', 'anything for', 'options for', 'link to', 'direct me to']
 
 function getCategoriesFromMessage(message) {
   const t = normalize(message)
-  const tokens = tokenize(message)
   const categories = []
   for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    const matched = keywords.some(kw => t.includes(kw) || tokens.some(tok => tok.includes(kw.replace(/\s/g, '')) || kw.includes(tok)))
+    // Match only when the full keyword phrase appears in the message (e.g. "law", "machine learning").
+    // Avoids "learn" incorrectly matching "machine learning" and returning ML resources for "learn about law".
+    const matched = keywords.some(kw => t.includes(kw))
     if (matched) categories.push(cat)
   }
   return categories
@@ -235,7 +272,7 @@ function getSoftHintSuggestions(message) {
 }
 
 const SUGGESTION_LINES = {
-  '/dashboard': '**Dashboard** – Start a study session, see your overview, or open the Quiz hub.',
+  '/dashboard': '**Dashboard** – Start a study session and see your overview.',
   '/resources': '**Learning Resources** – Browse courses and materials by topic (AI, ML, Law, Business, web, etc.).',
   '/recommendations': '**Find Partners** – Get matched with study partners by interests and goals.',
   '/groups': '**Study Groups** – Join or create a group and use group chat.',
@@ -300,6 +337,19 @@ function getOutOfScopeReply(message, nlpIntent = null, nlpConfidence = 0) {
 
 function normalize(s) {
   return (s || '').toLowerCase().trim().replace(/\s+/g, ' ')
+}
+
+// EduConnect-related keywords: if the message contains none of these, treat as general and use LLM first
+const EDUCONNECT_KEYWORDS = [
+  'dashboard', 'login', 'sign up', 'signup', 'register', 'resource', 'course', 'partner', 'match',
+  'quiz', 'profile', 'feedback', 'group', 'study', 'educonnect', 'help', 'where is', 'how do i',
+  'timer', 'analytics', 'recommendation', 'bug', 'issue', 'password', 'account',
+  'learn', 'law', 'legal', 'business', 'ai', 'ml', 'tutorial', 'materials', 'accounting', 'economics',
+  'health', 'medical', 'nursing', 'education', 'agriculture', 'humanities', 'teaching', 'philosophy'
+]
+function isEduConnectQuestion(message) {
+  const t = normalize(message)
+  return EDUCONNECT_KEYWORDS.some(kw => t.includes(kw))
 }
 
 // Light tokenization: split on non-letters/numbers, drop very short and common words
@@ -404,7 +454,7 @@ function handleIssues(message) {
 
 function handleResources(message) {
   const t = normalize(message)
-  const categories = ['ai', 'ml', 'dl', 'nlp', 'ds', 'web', 'cyber', 'cv', 'mobile', 'law', 'business']
+  const categories = Object.keys(CATEGORY_KEYWORDS)
   const found = categories.filter(c => t.includes(c))
   if (found.length > 0) {
     const labels = found.map(c => CATEGORY_LABELS[c] || c).join(', ')
@@ -413,9 +463,9 @@ function handleResources(message) {
       actions: [{ path: '/resources', label: 'Open Resources' }]
     }
   }
-  if (t.includes('resource') || t.includes('course') || t.includes('tutorial') || t.includes('learn') || t.includes('law') || t.includes('legal') || t.includes('business') || t.includes('accounting')) {
+  if (t.includes('resource') || t.includes('course') || t.includes('tutorial') || t.includes('learn') || t.includes('law') || t.includes('legal') || t.includes('business') || t.includes('accounting') || t.includes('health') || t.includes('education') || t.includes('agriculture') || t.includes('humanities') || t.includes('medical') || t.includes('nursing')) {
     return {
-      text: '**Learning Resources** has courses and materials by topic: AI, ML, Data Science, Law, Business & Management, web dev, cybersecurity, and more. Filter by category and open external links.',
+      text: '**Learning Resources** has courses by topic: AI, ML, Data Science, Law, Business, Health, Education, Humanities, Agriculture, web dev, cybersecurity, and more. Filter by category and open external links.',
       actions: [{ path: '/resources', label: 'Open Resources' }]
     }
   }
@@ -436,7 +486,7 @@ function handleFeatures(message) {
     return { text: 'The **Study Timer** is on the Dashboard. Start a session there; your time is logged to Analytics.', actions: [{ path: '/dashboard', label: 'Dashboard' }] }
   }
   if (t.includes('quiz')) {
-    return { text: '**Quizzes** are available from the Dashboard (Quiz hub) or by going to a field (e.g. AI, ML). Your progress is saved.', actions: [{ path: '/dashboard', label: 'Dashboard' }] }
+    return { text: '**Quizzes** are in **Learning Resources**—go there and pick a topic (e.g. AI, ML) to take a quiz. Your progress is saved.', actions: [{ path: '/resources', label: 'Learning Resources' }] }
   }
   return null
 }
@@ -506,6 +556,23 @@ async function getReplyWithNLP(message) {
     return {
       text: "Send me a message and I'll try to help. You can ask where something is, how to do something, or report an issue.",
       actions: [{ path: '/feedback', label: 'Feedback' }]
+    }
+  }
+
+  // General (non–EduConnect) questions go straight to LLM so we don’t force them into app suggestions
+  if (!isEduConnectQuestion(message)) {
+    const llmText = await getLLMReply(message)
+    if (llmText) {
+      return { text: llmText, actions: [] }
+    }
+    // No API key or LLM failed – keep focus on EduConnect and guide with questions
+    return {
+      text: "I'm here to help with EduConnect and your studying. What would you like to do? For example: find a study partner, get learning resources by topic, try a quiz, or see where something is in the app—just ask.",
+      actions: [
+        { path: '/dashboard', label: 'Dashboard' },
+        { path: '/resources', label: 'Learning Resources' },
+        { path: '/partners', label: 'Find a Partner' }
+      ]
     }
   }
 

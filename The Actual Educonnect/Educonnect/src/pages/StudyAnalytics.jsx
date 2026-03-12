@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useLearningFields } from '../contexts/LearningFieldsContext'
 import Navigation from '../components/Navigation'
-import { learningFields } from '../data/quizData'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts'
 import '../styles/StudyAnalytics.css'
 
 function StudyAnalytics() {
   const { user } = useAuth()
+  const { learningFields } = useLearningFields()
   const navigate = useNavigate()
   const [viewMode, setViewMode] = useState('week') // 'week' or 'all-time'
 

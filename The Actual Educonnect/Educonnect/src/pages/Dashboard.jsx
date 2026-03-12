@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useStudy } from '../contexts/StudyContext'
 import { useNLP } from '../contexts/NLPContext'
-import { learningFields } from '../data/quizData'
+import { useLearningFields } from '../contexts/LearningFieldsContext'
 import Navigation from '../components/Navigation'
 import { IconCheck } from '../components/Icons'
 import { fetchStudyPlan } from '../api/studyPlanApi'
@@ -15,6 +15,7 @@ function Dashboard() {
   const { user } = useAuth()
   const { sessionTimer, isTimerRunning, accumulatedSeconds, pausedByInactivity, stopStudySession } = useStudy()
   const { topics } = useNLP()
+  const { learningFields } = useLearningFields()
   const navigate = useNavigate()
   const [recommendations, setRecommendations] = useState([])
   const [studyPlan, setStudyPlan] = useState({ schedule: [], suggestions: [], generatedAt: null })

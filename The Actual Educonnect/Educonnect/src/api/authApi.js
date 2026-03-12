@@ -1,3 +1,18 @@
+/*
+This file provides frontend API helper functions used to communicate with
+the backend authentication and user management system.
+
+It handles operations such as user signup, login, retrieving users for admin
+management, and updating user profiles. The functions send HTTP requests to
+the backend server using the Fetch API.
+
+The code also includes network error detection and user-friendly error
+messages when the backend server is unreachable. This helps developers
+quickly identify when the server is not running.
+
+Overall, this module acts as a communication layer between the frontend
+application and the backend API.
+*/
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const SERVER_UNREACHABLE_MSG = `Cannot reach the server at ${import.meta.env.VITE_API_URL || 'http://localhost:5000'}. Sign in and sign up require the backend to be running. In the project's server folder run: npm install then npm start, then try again.`

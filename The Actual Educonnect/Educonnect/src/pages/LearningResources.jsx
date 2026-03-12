@@ -5,11 +5,11 @@ import { useAuth } from '../contexts/AuthContext'
 import { useStudy } from '../contexts/StudyContext'
 import Navigation from '../components/Navigation'
 import { IconCheck } from '../components/Icons'
-import { resourceToField, categoryToField, learningFields } from '../data/quizData'
+import { useLearningFields } from '../contexts/LearningFieldsContext'
 import { learningResources } from '../data/learningResources'
 import '../styles/LearningResources.css'
 
-const getFieldForResource = (resource) => {
+function getFieldForResource(resource, learningFields, resourceToField, categoryToField) {
   const fieldFromResource = resourceToField[resource.id]
   if (fieldFromResource) return fieldFromResource
   const fieldId = categoryToField[resource.category]
@@ -19,6 +19,7 @@ const getFieldForResource = (resource) => {
 function LearningResources() {
   const { user } = useAuth()
   const { startStudySession } = useStudy()
+  const { learningFields, resourceToField, categoryToField } = useLearningFields()
   const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState('all')
 
@@ -146,7 +147,7 @@ function LearningResources() {
         {/* Resources Grid */}
         <div className="resources-grid">
           {filteredResources.map((resource, index) => {
-            const field = getFieldForResource(resource)
+            const field = getFieldForResource(resource, learningFields, resourceToField, categoryToField)
             const proficiency = field && user?.studyStats?.fieldProgress?.[field.id]?.proficiency
             return (
             <motion.div

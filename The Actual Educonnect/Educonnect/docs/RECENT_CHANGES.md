@@ -1,6 +1,8 @@
 # Recent changes (Cohort insights + ML in study plan)
 
-This document summarizes the **latest changes** added to EduConnect to demonstrate:
+> **For the most recent work** (AI quiz generation from resources, no-admin flow, QuizHub auto-generate, chat improvements), see **[CHANGES_SINCE_LATEST.md](./CHANGES_SINCE_LATEST.md)**. The document below describes earlier changes.
+
+This document summarizes **earlier changes** added to EduConnect to demonstrate:
 
 - **Cohort insights** (“students like you”) aggregation and suggestions
 - A trained **ML model** integrated into the app (training in Python, inference in Node)

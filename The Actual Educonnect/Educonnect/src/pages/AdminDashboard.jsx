@@ -65,6 +65,7 @@ function AdminDashboard() {
   const quickActions = [
     { label: 'View All Users', route: '/admin/users', desc: 'Manage registered users' },
     { label: 'Quiz Assessments', route: '/admin/assessments', desc: 'View quiz scores & proficiency' },
+    { label: 'Generate Quizzes (AI)', route: '/admin/quiz-generate', desc: 'Generate quiz content with OpenAI' },
     { label: 'Feedback', route: '/feedback', desc: 'Respond to user feedback' }
   ]
 

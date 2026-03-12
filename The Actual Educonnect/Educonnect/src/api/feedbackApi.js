@@ -1,3 +1,19 @@
+/*
+This file provides frontend API helper functions for managing feedback
+within the application. It communicates with the backend feedback routes
+using HTTP requests.
+
+The functions allow users to submit feedback, retrieve their own feedback,
+and allow administrators to view all feedback and respond to it. Requests
+are sent to the backend API using the Fetch API and JSON data.
+
+A helper function is used to generate request headers and optionally include
+the user's email for identification and authorization. Error handling is
+included to ensure meaningful messages are returned when requests fail.
+
+Overall, this module acts as the communication layer between the frontend
+feedback interface and the backend feedback management system.
+*/
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 function headers(userEmail) {

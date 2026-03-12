@@ -5,12 +5,14 @@ import { useAuth } from '../contexts/AuthContext'
 import Navigation from '../components/Navigation'
 import { IconCheck } from '../components/Icons'
 import { logActivity } from '../api/activityApi'
-import { learningFields, PASSING_SCORE, getProficiency } from '../data/quizData'
+import { PASSING_SCORE, getProficiency } from '../data/quizData'
+import { useLearningFields } from '../contexts/LearningFieldsContext'
 import '../styles/Quiz.css'
 
 function Quiz() {
   const { fieldId, quizId } = useParams()
   const { user, recordFieldProgress } = useAuth()
+  const { learningFields } = useLearningFields()
   const navigate = useNavigate()
 
   const field = learningFields.find((f) => f.id === fieldId)
