@@ -1,130 +1,376 @@
-// Recommendation algorithm based on multiple factors
+/**
+ * Hybrid Study Partner Recommendation System
+ *
+ * Features:
+ * - Safe input validation
+ * - Content similarity
+ * - Availability compatibility
+ * - Engagement / reliability scoring
+ * - Ranked-interest bonus
+ * - Match explanations
+ * - Fair handling of missing optional fields
+ *
+ * Returns users enriched with:
+ * - matchScore (0–100)
+ * - scoreBreakdown
+ * - reasons
+ */
 
+export function getRecommendations(currentUser, allUsers, limit = null) {
+  // Guard against missing or invalid input
+  if (!currentUser || typeof currentUser !== 'object' || !Array.isArray(allUsers)) {
+    return []
+  }
+
+  const otherUsers = allUsers.filter(
+    user =>
+      user &&
+      typeof user === 'object' &&
+      user.id != null &&
+      currentUser.id != null &&
+      user.id !== currentUser.id
+  )
+
+  const scoredUsers = otherUsers.map(user => {
+    const content = calculateContentSimilarity(currentUser, user)
+    const availability = calculateAvailabilityCompatibility(currentUser, user)
+    const engagement = calculateEngagementScore(user)
+    const rankedBonus = calculateRankedInterestBonus(currentUser, user)
+
+    // Only include components that could actually be computed
+    const components = [
+      { key: 'contentScore', value: content, weight: 0.6 },
+      { key: 'availabilityScore', value: availability, weight: 0.25 },
+      { key: 'engagementScore', value: engagement, weight: 0.15 }
+    ].filter(component => component.value !== null)
+
+    const totalWeight = components.reduce((sum, component) => sum + component.weight, 0)
+
+    const finalScore =
+      totalWeight > 0
+        ? components.reduce((sum, component) => sum + component.value * component.weight, 0) / totalWeight
+        : 0
+
+    const scoreBreakdown = {}
+    for (const component of components) {
+      scoreBreakdown[component.key] = Math.round(component.value * 100)
+    }
+
+    return {
+      ...user,
+      matchScore: Math.round(finalScore * 100),
+      scoreBreakdown,
+      reasons: generateMatchReasons(currentUser, user, { rankedBonus })
+    }
+  })
+
+  scoredUsers.sort((a, b) => b.matchScore - a.matchScore)
+
+  // limit: number (including 0) => slice; null/undefined => return all
+  return typeof limit === 'number' && limit >= 0
+    ? scoredUsers.slice(0, limit)
+    : scoredUsers
+}
+
+/**
+ * Backward-compatible similarity function.
+ * Returns only content-based similarity (0–1).
+ */
 export function calculateSimilarity(user1, user2) {
+  const result = calculateContentSimilarity(user1, user2)
+  return result === null ? 0 : result
+}
+
+function calculateContentSimilarity(user1, user2) {
+  if (!user1 || !user2 || typeof user1 !== 'object' || typeof user2 !== 'object') {
+    return null
+  }
+
   let score = 0
   let maxScore = 0
 
-  // Primary factor: interests (ordered + additional) — universal; highest weight (50%)
-  const weightPrimary = 0.5
-  const additional1 = parseCommaSeparated(user1.csInterests || '')
-  const additional2 = parseCommaSeparated(user2.csInterests || '')
-  const ordered1 = parseCommaSeparated(user1.orderedInterests || '')
-  const ordered2 = parseCommaSeparated(user2.orderedInterests || '')
-  const interests1 = [...ordered1, ...additional1] // ordered first (user-ranked)
-  const interests2 = [...ordered2, ...additional2]
-  const interestsMatch = calculateJaccardSimilarity(interests1, interests2)
-  score += interestsMatch * weightPrimary
-  maxScore += weightPrimary
-
-  // Technical/Skills (weight: 12%)
-  const weightTech = 0.12
-  const tech1 = parseCommaSeparated(user1.technicalSkills || '')
-  const tech2 = parseCommaSeparated(user2.technicalSkills || '')
-  const techMatch = calculateJaccardSimilarity(tech1, tech2)
-  score += techMatch * weightTech
-  maxScore += weightTech
-
-  // Soft Skills (weight: 8%)
-  const weightSoft = 0.08
-  const soft1 = parseCommaSeparated(user1.softSkills || '')
-  const soft2 = parseCommaSeparated(user2.softSkills || '')
-  const softMatch = calculateJaccardSimilarity(soft1, soft2)
-  score += softMatch * weightSoft
-  maxScore += weightSoft
-
-  // Research Interests (weight: 8%)
-  const weightResearch = 0.08
-  const research1 = parseCommaSeparated(user1.researchInterests || '')
-  const research2 = parseCommaSeparated(user2.researchInterests || '')
-  const researchMatch = calculateJaccardSimilarity(research1, research2)
-  score += researchMatch * weightResearch
-  maxScore += weightResearch
-
-  // Professional Interests (weight: 8%)
-  const weightProfessional = 0.08
-  const prof1 = parseCommaSeparated(user1.professionalInterests || '')
-  const prof2 = parseCommaSeparated(user2.professionalInterests || '')
-  const profMatch = calculateJaccardSimilarity(prof1, prof2)
-  score += profMatch * weightProfessional
-  maxScore += weightProfessional
-
-  // Hobbies (weight: 5%)
-  const weightHobbies = 0.05
-  const hobbies1 = parseCommaSeparated(user1.hobbies || '')
-  const hobbies2 = parseCommaSeparated(user2.hobbies || '')
-  const hobbiesMatch = calculateJaccardSimilarity(hobbies1, hobbies2)
-  score += hobbiesMatch * weightHobbies
-  maxScore += weightHobbies
-
-  // Preferred Learning Style (weight: 4%)
-  const weightLearning = 0.04
-  if (user1.preferredLearningStyle && user2.preferredLearningStyle) {
-    if (user1.preferredLearningStyle === user2.preferredLearningStyle) {
-      score += weightLearning
+  const compareList = (list1, list2, weight) => {
+    if (list1.length > 0 || list2.length > 0) {
+      score += calculateJaccardSimilarity(list1, list2) * weight
+      maxScore += weight
     }
   }
-  maxScore += weightLearning
 
-  // Study Partners Preferences (weight: 3%)
-  const weightPartnerPref = 0.03
-  if (user1.studyPartnersPreferences && user2.studyPartnersPreferences) {
-    if (user1.studyPartnersPreferences === user2.studyPartnersPreferences) {
-      score += weightPartnerPref
+  const compareExact = (value1, value2, weight) => {
+    const normalized1 = normalizeText(value1)
+    const normalized2 = normalizeText(value2)
+
+    if (normalized1 && normalized2) {
+      if (normalized1 === normalized2) {
+        score += weight
+      }
+      maxScore += weight
     }
   }
-  maxScore += weightPartnerPref
 
-  // Preferred Study Hours (weight: 2%)
-  const weightStudyHours = 0.02
-  if (user1.preferredStudyHours && user2.preferredStudyHours) {
-    if (user1.preferredStudyHours === user2.preferredStudyHours) {
-      score += weightStudyHours
+  const interests1 = unique([
+    ...parseCommaSeparated(user1.orderedInterests),
+    ...parseCommaSeparated(user1.csInterests)
+  ])
+
+  const interests2 = unique([
+    ...parseCommaSeparated(user2.orderedInterests),
+    ...parseCommaSeparated(user2.csInterests)
+  ])
+
+  // Interests split into:
+  // - General shared interests: 40%
+  // - Ranked-interest bonus: 10%
+  compareList(interests1, interests2, 0.4)
+
+  const rankedBonus = calculateRankedInterestBonus(user1, user2)
+  if (rankedBonus !== null) {
+    score += rankedBonus * 0.1
+    maxScore += 0.1
+  }
+
+  compareList(parseCommaSeparated(user1.technicalSkills), parseCommaSeparated(user2.technicalSkills), 0.12)
+  compareList(parseCommaSeparated(user1.softSkills), parseCommaSeparated(user2.softSkills), 0.08)
+  compareList(parseCommaSeparated(user1.researchInterests), parseCommaSeparated(user2.researchInterests), 0.08)
+  compareList(parseCommaSeparated(user1.professionalInterests), parseCommaSeparated(user2.professionalInterests), 0.08)
+  compareList(parseCommaSeparated(user1.hobbies), parseCommaSeparated(user2.hobbies), 0.05)
+
+  compareExact(user1.preferredLearningStyle, user2.preferredLearningStyle, 0.05)
+  compareExact(user1.studyPartnersPreferences, user2.studyPartnersPreferences, 0.03)
+  if (user1.academicLevel != null || user2.academicLevel != null) {
+    compareExact(user1.academicLevel, user2.academicLevel, 0.04)
+  }
+
+  return maxScore > 0 ? score / maxScore : null
+}
+
+function calculateRankedInterestBonus(user1, user2) {
+  const ranked1 = parseCommaSeparated(user1?.orderedInterests)
+  const ranked2 = parseCommaSeparated(user2?.orderedInterests)
+
+  if (ranked1.length === 0 || ranked2.length === 0) {
+    return null
+  }
+
+  // Top 3 ranked interests matter most
+  const weights = [3, 2, 1]
+  const maxRankWeight = weights.reduce((sum, weight) => sum + weight, 0)
+
+  let bonus = 0
+
+  for (let i = 0; i < Math.min(3, ranked1.length); i++) {
+    const interest = ranked1[i]
+    const matchIndex = ranked2.indexOf(interest)
+
+    if (matchIndex === 0) {
+      bonus += weights[i]
+    } else if (matchIndex === 1) {
+      bonus += weights[i] * 0.75
+    } else if (matchIndex === 2) {
+      bonus += weights[i] * 0.5
     }
   }
-  maxScore += weightStudyHours
 
-  // Normalize score to 0-1 range
-  return maxScore > 0 ? score / maxScore : 0
+  return bonus / maxRankWeight
 }
 
-function parseCommaSeparated(str) {
-  if (!str || typeof str !== 'string') return []
-  return str
-    .split(',')
-    .map(item => item.trim())
-    .filter(item => item && item.toLowerCase() !== 'none')
-    .map(item => item.toLowerCase())
+function calculateAvailabilityCompatibility(user1, user2) {
+  if (!user1 || !user2 || typeof user1 !== 'object' || typeof user2 !== 'object') {
+    return null
+  }
+
+  let score = 0
+  let maxScore = 0
+
+  const hours1 = normalizeText(user1.preferredStudyHours)
+  const hours2 = normalizeText(user2.preferredStudyHours)
+
+  if (hours1 && hours2) {
+    maxScore += 0.5
+
+    if (hours1 === hours2) {
+      score += 0.5
+    } else if (areStudyHoursClose(hours1, hours2)) {
+      score += 0.25
+    }
+  }
+
+  const days1 = parseCommaSeparated(user1.availableDays)
+  const days2 = parseCommaSeparated(user2.availableDays)
+
+  if (days1.length > 0 || days2.length > 0) {
+    score += calculateJaccardSimilarity(days1, days2) * 0.5
+    maxScore += 0.5
+  }
+
+  return maxScore > 0 ? score / maxScore : null
 }
 
-function calculateJaccardSimilarity(set1, set2) {
-  if (set1.length === 0 && set2.length === 0) return 1
-  if (set1.length === 0 || set2.length === 0) return 0
+function calculateEngagementScore(user) {
+  if (!user || typeof user !== 'object') {
+    return null
+  }
 
-  const intersection = set1.filter(item => set2.includes(item))
-  const union = [...new Set([...set1, ...set2])]
-  
-  return intersection.length / union.length
+  let score = 0
+  let maxScore = 0
+
+  if (typeof user.attendanceRate === 'number') {
+    score += clamp(user.attendanceRate, 0, 1) * 0.4
+    maxScore += 0.4
+  }
+
+  if (typeof user.responseRate === 'number') {
+    score += clamp(user.responseRate, 0, 1) * 0.25
+    maxScore += 0.25
+  }
+
+  if (typeof user.averageRating === 'number') {
+    score += (clamp(user.averageRating, 0, 5) / 5) * 0.2
+    maxScore += 0.2
+  }
+
+  if (typeof user.isActive === 'boolean') {
+    score += user.isActive ? 0.15 : 0
+    maxScore += 0.15
+  }
+
+  return maxScore > 0 ? score / maxScore : null
 }
 
-export function getRecommendations(currentUser, allUsers, limit = null) {
-  // Filter out current user
-  const otherUsers = allUsers.filter(u => u.id !== currentUser.id)
-  
-  // Calculate similarity scores
-  const scoredUsers = otherUsers.map(user => ({
-    user,
-    similarity: calculateSimilarity(currentUser, user)
-  }))
-  
-  // Sort by similarity (highest first)
-  scoredUsers.sort((a, b) => b.similarity - a.similarity)
-  
-  // Return top N if limit specified, otherwise return all
-  const results = limit ? scoredUsers.slice(0, limit) : scoredUsers
-  
-  return results.map(item => ({
-    ...item.user,
-    matchScore: Math.round(item.similarity * 100)
-  }))
+function generateMatchReasons(user1, user2, opts = {}) {
+  const reasons = []
+  const rankedBonus = opts.rankedBonus ?? calculateRankedInterestBonus(user1, user2)
+
+  const sharedInterests = getSharedItems(
+    [...parseCommaSeparated(user1?.orderedInterests), ...parseCommaSeparated(user1?.csInterests)],
+    [...parseCommaSeparated(user2?.orderedInterests), ...parseCommaSeparated(user2?.csInterests)]
+  )
+
+  const sharedTechnicalSkills = getSharedItems(
+    parseCommaSeparated(user1?.technicalSkills),
+    parseCommaSeparated(user2?.technicalSkills)
+  )
+
+  const sharedSoftSkills = getSharedItems(
+    parseCommaSeparated(user1?.softSkills),
+    parseCommaSeparated(user2?.softSkills)
+  )
+
+  const sharedDays = getSharedItems(
+    parseCommaSeparated(user1?.availableDays),
+    parseCommaSeparated(user2?.availableDays)
+  )
+
+  if (rankedBonus !== null && rankedBonus >= 0.5) {
+    reasons.push('Your top-ranked interests align well')
+  }
+
+  if (sharedInterests.length > 0) {
+    reasons.push(`You share interests in ${sharedInterests.slice(0, 3).join(', ')}`)
+  }
+
+  if (sharedTechnicalSkills.length > 0) {
+    reasons.push(`You both have technical skills in ${sharedTechnicalSkills.slice(0, 3).join(', ')}`)
+  }
+
+  if (sharedSoftSkills.length > 0) {
+    reasons.push(`You both show strengths in ${sharedSoftSkills.slice(0, 2).join(', ')}`)
+  }
+
+  if (
+    normalizeText(user1?.preferredLearningStyle) &&
+    normalizeText(user1?.preferredLearningStyle) === normalizeText(user2?.preferredLearningStyle)
+  ) {
+    reasons.push(`You both prefer a ${user1.preferredLearningStyle} learning style`)
+  }
+
+  if (
+    normalizeText(user1?.preferredStudyHours) &&
+    normalizeText(user1?.preferredStudyHours) === normalizeText(user2?.preferredStudyHours)
+  ) {
+    reasons.push(`You are both available during ${user1.preferredStudyHours}`)
+  } else if (
+    normalizeText(user1?.preferredStudyHours) &&
+    normalizeText(user2?.preferredStudyHours) &&
+    areStudyHoursClose(normalizeText(user1.preferredStudyHours), normalizeText(user2.preferredStudyHours))
+  ) {
+    reasons.push('Your preferred study hours are close enough to be compatible')
+  }
+
+  if (sharedDays.length > 0) {
+    reasons.push(`Your study days overlap on ${sharedDays.slice(0, 3).join(', ')}`)
+  }
+
+  if (typeof user2?.averageRating === 'number' && user2.averageRating >= 4) {
+    reasons.push('This user has strong peer feedback')
+  }
+
+  if (typeof user2?.attendanceRate === 'number' && user2.attendanceRate >= 0.8) {
+    reasons.push('This user has a high attendance rate')
+  }
+
+  // Fallback reason if nothing specific was found
+  if (reasons.length === 0) {
+    reasons.push('Based on your profile and preferences')
+  }
+
+  // Keep explanations manageable
+  return reasons.slice(0, 5)
 }
 
+function parseCommaSeparated(value) {
+  if (!value || typeof value !== 'string') {
+    return []
+  }
+
+  return unique(
+    value
+      .split(',')
+      .map(item => normalizeText(item))
+      .filter(item => item && item !== 'none')
+  )
+}
+
+function calculateJaccardSimilarity(arr1, arr2) {
+  const set1 = new Set(arr1)
+  const set2 = new Set(arr2)
+
+  if (set1.size === 0 && set2.size === 0) return 1
+  if (set1.size === 0 || set2.size === 0) return 0
+
+  const intersectionSize = [...set1].filter(item => set2.has(item)).length
+  const unionSize = new Set([...set1, ...set2]).size
+
+  return intersectionSize / unionSize
+}
+
+function getSharedItems(arr1, arr2) {
+  const set2 = new Set(arr2)
+  return [...new Set(arr1.filter(item => set2.has(item)))]
+}
+
+function areStudyHoursClose(hours1, hours2) {
+  // Symmetric matching: order does not matter
+  const closePairs = [
+    ['morning', 'early morning'],
+    ['morning', 'afternoon'],
+    ['afternoon', 'evening'],
+    ['evening', 'night']
+  ]
+
+  return closePairs.some(
+    ([a, b]) => (hours1 === a && hours2 === b) || (hours1 === b && hours2 === a)
+  )
+}
+
+function normalizeText(value) {
+  return String(value ?? '').trim().toLowerCase()
+}
+
+function unique(arr) {
+  return [...new Set(arr)]
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value))
+}

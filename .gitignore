@@ -82,6 +82,11 @@ Desktop.ini
 *.sw?
 *~
 
+# === Database (do not push) ===
+*.db
+*.sqlite
+*.sqlite3
+
 # === Misc (temp / user files) ===
 Untitled
 *.log
