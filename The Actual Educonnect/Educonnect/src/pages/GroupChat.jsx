@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useStudy } from '../contexts/StudyContext'
 import Navigation from '../components/Navigation'
-import { getGroupMessages, sendGroupMessage } from '../utils/groupChat'
+import { getGroupMessagesApi, sendGroupMessageApi } from '../api/groupsApi'
 import { getRecommendedResourcesFromChat } from '../utils/chatResourceRecommender'
 import '../styles/GroupChat.css'
 
@@ -34,8 +34,11 @@ function GroupChat() {
       return
     }
 
-    const loadMessages = () => {
-      setMessages(getGroupMessages(chatRoomId))
+    const loadMessages = async () => {
+      try {
+        const msgs = await getGroupMessagesApi(chatRoomId, user.id)
+        setMessages(msgs)
+      } catch (_) {}
     }
     loadMessages()
     pollRef.current = setInterval(loadMessages, 2000)
@@ -50,18 +53,17 @@ function GroupChat() {
     inputRef.current?.focus()
   }, [chatRoomId])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const text = newMessage.trim()
     if (!text || !user) return
 
-    sendGroupMessage(chatRoomId, {
-      userId: user.id,
-      userName: `${user.firstName} ${user.lastName}`,
-      text
-    })
-    setMessages(getGroupMessages(chatRoomId))
-    setNewMessage('')
+    try {
+      await sendGroupMessageApi(chatRoomId, user, text)
+      const msgs = await getGroupMessagesApi(chatRoomId, user.id)
+      setMessages(msgs)
+      setNewMessage('')
+    } catch (_) {}
   }
 
   if (!user) return null

@@ -48,6 +48,23 @@ function rowToUser(row) {
   }
 }
 
+// GET /api/users – list all non-admin users (for dashboard, recommendations, study groups)
+router.get('/', (req, res) => {
+  try {
+    const userId = (req.headers['x-user-id'] || '').trim()
+    if (!userId) {
+      return res.status(401).json({ error: 'X-User-Id header required' })
+    }
+
+    const rows = req.db.prepare('SELECT * FROM users WHERE role = ? ORDER BY created_at DESC').all('user')
+    const users = rows.map(rowToUser)
+    res.json({ users })
+  } catch (err) {
+    console.error('List users error:', err)
+    res.status(500).json({ error: err.message || 'Failed to fetch users' })
+  }
+})
+
 const KEY_TO_COL = {
   studyStats: 'study_stats',
   lastWeekReset: 'last_week_reset',

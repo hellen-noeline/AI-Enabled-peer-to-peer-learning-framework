@@ -200,14 +200,17 @@ function Feedback() {
     let toEmail = feedback.userEmail || feedback.user_email
     let userName = feedback.userName || feedback.user_name
 
-    // Fallback: look up user's email from registered users if not on feedback
-    if (!toEmail && feedback.userId) {
-      const users = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-      const found = users.find((u) => u.id === feedback.userId)
-      if (found) {
-        toEmail = found.email
-        userName = userName || `${found.firstName || ''} ${found.lastName || ''}`.trim() || found.email
-      }
+    // Fallback: look up user's email from API if not on feedback
+    if (!toEmail && feedback.userId && user?.email) {
+      try {
+        const { getAdminUsersApi } = await import('../api/authApi')
+        const users = await getAdminUsersApi(user.email)
+        const found = users.find((u) => u.id === feedback.userId)
+        if (found) {
+          toEmail = found.email
+          userName = userName || `${found.firstName || ''} ${found.lastName || ''}`.trim() || found.email
+        }
+      } catch (_) {}
     }
 
     try {

@@ -217,6 +217,51 @@ export async function initSchema() {
   `)
   exec(`CREATE INDEX IF NOT EXISTS idx_activity_events_user_id ON activity_events(user_id)`)
   exec(`CREATE INDEX IF NOT EXISTS idx_activity_events_created_at ON activity_events(created_at)`)
+  // Study groups (interest-based)
+  exec(`
+    CREATE TABLE IF NOT EXISTS study_groups (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      interest TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `)
+  exec(`
+    CREATE TABLE IF NOT EXISTS group_members (
+      group_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (group_id, user_id),
+      FOREIGN KEY (group_id) REFERENCES study_groups(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+  exec(`CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id)`)
+  exec(`
+    CREATE TABLE IF NOT EXISTS group_messages (
+      id TEXT PRIMARY KEY,
+      group_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      user_name TEXT,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (group_id) REFERENCES study_groups(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+  exec(`CREATE INDEX IF NOT EXISTS idx_group_messages_group ON group_messages(group_id)`)
+  exec(`
+    CREATE TABLE IF NOT EXISTS dm_messages (
+      id TEXT PRIMARY KEY,
+      dm_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      user_name TEXT,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+  exec(`CREATE INDEX IF NOT EXISTS idx_dm_messages_dm ON dm_messages(dm_id)`)
   // Migration: add degree_program to users if missing
   try {
     const infoUsers = db.prepare('PRAGMA table_info(users)').all()

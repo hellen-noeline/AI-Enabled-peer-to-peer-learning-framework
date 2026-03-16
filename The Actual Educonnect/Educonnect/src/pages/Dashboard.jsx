@@ -32,23 +32,21 @@ function Dashboard() {
       try {
         const { loadDataset, getDatasetUsers } = await import('../utils/datasetLoader')
         const { getRecommendations } = await import('../utils/recommendationEngine')
-        
+        const { getUsersApi } = await import('../api/usersApi')
+
         await loadDataset()
-        const allUsers = [
-          ...getDatasetUsers(),
-          ...JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-        ]
-        
+        const datasetUsers = getDatasetUsers()
+        const apiUsers = await getUsersApi(user.id).catch(() => [])
+        const allUsers = [...datasetUsers, ...apiUsers]
+
         const recs = getRecommendations(user, allUsers, 3)
         setRecommendations(recs)
       } catch (error) {
         console.error('Error loading recommendations:', error)
       }
     }
-    
-    if (user) {
-      loadRecommendations()
-    }
+
+    if (user) loadRecommendations()
   }, [user])
 
   useEffect(() => {

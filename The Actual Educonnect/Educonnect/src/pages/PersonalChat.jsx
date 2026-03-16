@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import Navigation from '../components/Navigation'
-import { getDmId, getDmMessages, sendDmMessage } from '../utils/groupChat'
+import { getDmMessagesApi, sendDmMessageApi } from '../api/dmApi'
 import '../styles/GroupChat.css'
 import '../styles/PersonalChat.css'
 
@@ -24,23 +24,26 @@ function PersonalChat() {
     : 'Study partner'
   const fromGroup = location.state?.fromGroup
 
-  const dmId = user && otherUserId ? getDmId(user.id, otherUserId) : null
-
   useEffect(() => {
     if (!user) {
       navigate('/login')
       return
     }
-    if (!otherUserId || !dmId) {
+    if (!otherUserId) {
       navigate('/groups')
       return
     }
 
-    const loadMessages = () => setMessages(getDmMessages(dmId))
+    const loadMessages = async () => {
+      try {
+        const msgs = await getDmMessagesApi(otherUserId, user.id)
+        setMessages(msgs)
+      } catch (_) {}
+    }
     loadMessages()
     pollRef.current = setInterval(loadMessages, 2000)
     return () => clearInterval(pollRef.current)
-  }, [user, otherUserId, dmId, navigate])
+  }, [user, otherUserId, navigate])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -48,20 +51,19 @@ function PersonalChat() {
 
   useEffect(() => {
     inputRef.current?.focus()
-  }, [dmId])
+  }, [otherUserId])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const text = newMessage.trim()
-    if (!text || !user || !dmId) return
+    if (!text || !user || !otherUserId) return
 
-    sendDmMessage(dmId, {
-      userId: user.id,
-      userName: `${user.firstName} ${user.lastName}`,
-      text
-    })
-    setMessages(getDmMessages(dmId))
-    setNewMessage('')
+    try {
+      await sendDmMessageApi(otherUserId, user, text)
+      const msgs = await getDmMessagesApi(otherUserId, user.id)
+      setMessages(msgs)
+      setNewMessage('')
+    } catch (_) {}
   }
 
   if (!user) return null

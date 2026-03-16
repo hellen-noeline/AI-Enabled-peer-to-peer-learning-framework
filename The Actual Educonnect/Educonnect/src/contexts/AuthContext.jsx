@@ -30,20 +30,9 @@ export function AuthProvider({ children }) {
     const storedUser = localStorage.getItem('EduConnect_user')
     if (storedUser) {
       let parsedUser = JSON.parse(storedUser)
-      // Sync with users list to get latest profile/stats (in case of updates)
-      const users = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-      const latestUser = users.find(u => u.id === parsedUser?.id)
-      if (latestUser) {
-        parsedUser = latestUser
-        if (!parsedUser.role) {
-          parsedUser = { ...parsedUser, role: isAdminEmail(parsedUser.email) ? 'admin' : 'user' }
-          const idx = users.findIndex(u => u.id === parsedUser.id)
-          if (idx >= 0) {
-            users[idx] = parsedUser
-            localStorage.setItem('EduConnect_users', JSON.stringify(users))
-          }
-          localStorage.setItem('EduConnect_user', JSON.stringify(parsedUser))
-        }
+      if (!parsedUser.role) {
+        parsedUser = { ...parsedUser, role: isAdminEmail(parsedUser.email) ? 'admin' : 'user' }
+        localStorage.setItem('EduConnect_user', JSON.stringify(parsedUser))
       }
       setUser(parsedUser)
       if (parsedUser) {
@@ -125,15 +114,6 @@ export function AuthProvider({ children }) {
 
   const updateUserInStorage = (updatedUser) => {
     localStorage.setItem('EduConnect_user', JSON.stringify(updatedUser))
-    
-    // Update in users list
-    const users = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-    const userIndex = users.findIndex(u => u.id === updatedUser.id)
-    if (userIndex !== -1) {
-      users[userIndex] = updatedUser
-      localStorage.setItem('EduConnect_users', JSON.stringify(users))
-    }
-    // Sync studyStats to backend for admin quiz assessments
     if (updatedUser?.studyStats && updatedUser?.id) {
       updateUserApi(updatedUser.id, { studyStats: updatedUser.studyStats })
     }
@@ -152,11 +132,6 @@ export function AuthProvider({ children }) {
   }
 
   const syncUserToLocalStorage = (u) => {
-    const users = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-    const idx = users.findIndex(x => x.id === u.id)
-    if (idx >= 0) users[idx] = u
-    else users.push(u)
-    localStorage.setItem('EduConnect_users', JSON.stringify(users))
     localStorage.setItem('EduConnect_user', JSON.stringify(u))
   }
 

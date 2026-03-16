@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import Navigation from '../components/Navigation'
-import { getChatRoomId, joinGroup } from '../utils/groupChat'
+import { getGroupsApi, joinGroupApi } from '../api/groupsApi'
 import '../styles/StudyGroups.css'
 
 function StudyGroups() {
@@ -20,204 +20,26 @@ function StudyGroups() {
       return
     }
 
-    // Generate study groups based on user's interests
-    const generateGroups = async () => {
+    const loadGroups = async () => {
       try {
-        const { loadDataset, getDatasetUsers } = await import('../utils/datasetLoader')
-        await loadDataset()
-        const datasetUsers = getDatasetUsers()
-        const allUsers = [
-          ...datasetUsers,
-          ...JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-        ]
+        const groupsData = await getGroupsApi(user.id)
+        setGroups(groupsData)
 
-        const userGroups = createStudyGroups(user, allUsers)
-        setGroups(userGroups)
-
-        // Collect unique degree programmes for optional filtering
         const programmes = new Set()
-        allUsers.forEach(u => {
-          if (u.degreeProgram && typeof u.degreeProgram === 'string' && u.degreeProgram.trim().length > 0) {
-            programmes.add(u.degreeProgram)
-          }
+        groupsData.forEach(g => {
+          (g.programmes || []).forEach(p => programmes.add(p))
         })
         setAvailableProgrammes(Array.from(programmes).sort())
       } catch (error) {
-        console.error('Error generating groups:', error)
+        console.error('Error loading groups:', error)
+        setGroups([])
       } finally {
         setLoading(false)
       }
     }
 
-    generateGroups()
+    loadGroups()
   }, [user, navigate])
-
-  const createStudyGroups = (currentUser, allUsers) => {
-    // Unified interests: ordered (fields + sub-fields) + additional interests
-    const ordered = parseCommaSeparated(currentUser.orderedInterests || '')
-    const additional = parseCommaSeparated(currentUser.csInterests || '')
-    const userInterests = [...ordered, ...additional].filter((v, i, a) => a.indexOf(v) === i)
-    const userTechSkills = parseCommaSeparated(currentUser.technicalSkills || '')
-    const userResearch = parseCommaSeparated(currentUser.researchInterests || '')
-
-    // Filter out current user
-    const otherUsers = allUsers.filter(u => u.id !== currentUser.id)
-
-    // Create groups based on interests (ordered + additional)
-    const interestGroups = {}
-    
-    userInterests.forEach(interest => {
-      const interestKey = interest.toLowerCase().trim()
-      if (!interestKey) return
-      if (!interestGroups[interestKey]) {
-        interestGroups[interestKey] = {
-          name: interest,
-          interest: interestKey,
-          members: [],
-          commonInterests: [interest],
-          matchScore: 0
-        }
-      }
-
-      // Find users with similar interests (ordered + additional)
-      otherUsers.forEach(otherUser => {
-        const otherOrdered = parseCommaSeparated(otherUser.orderedInterests || '')
-        const otherAdditional = parseCommaSeparated(otherUser.csInterests || '')
-        const otherInterests = [...otherOrdered, ...otherAdditional]
-        if (otherInterests.some(i => i.toLowerCase().trim() === interestKey)) {
-          // Check if user is not already in group
-          if (!interestGroups[interestKey].members.find(m => m.id === otherUser.id)) {
-            // Calculate match score
-            const matchScore = calculateGroupMatch(currentUser, otherUser, interestKey)
-            if (matchScore > 0.3) { // Minimum 30% match
-              interestGroups[interestKey].members.push({
-                ...otherUser,
-                matchScore: Math.round(matchScore * 100)
-              })
-            }
-          }
-        }
-      })
-
-      // Sort members by match score
-      interestGroups[interestKey].members.sort((a, b) => b.matchScore - a.matchScore)
-      
-      // Limit to top 5-8 members per group
-      interestGroups[interestKey].members = interestGroups[interestKey].members.slice(0, 8)
-      
-      // Calculate average match score for the group
-      if (interestGroups[interestKey].members.length > 0) {
-        const avgScore = interestGroups[interestKey].members.reduce((sum, m) => sum + m.matchScore, 0) / interestGroups[interestKey].members.length
-        interestGroups[interestKey].matchScore = Math.round(avgScore)
-      }
-    })
-
-    // Convert to array and filter groups with at least 2 members (including current user)
-    const groupsArray = Object.values(interestGroups)
-      .filter(group => group.members.length >= 2)
-      .map(group => {
-        const programmeSet = new Set()
-        group.members.forEach(m => {
-          if (m.degreeProgram) programmeSet.add(m.degreeProgram)
-        })
-        if (currentUser.degreeProgram) programmeSet.add(currentUser.degreeProgram)
-
-        return {
-          ...group,
-          totalMembers: group.members.length + 1, // +1 for current user
-          programmes: Array.from(programmeSet),
-          id: `group_${group.interest}_${Date.now()}`,
-          chatRoomId: getChatRoomId(group)
-        }
-      })
-      .sort((a, b) => b.matchScore - a.matchScore)
-
-    return groupsArray
-  }
-
-  const calculateGroupMatch = (user1, user2, primaryInterest) => {
-    let score = 0
-    let factors = 0
-
-    // Same degree program or same course area — 15% (tailor groups to user's field)
-    const area1 = getCourseArea(user1)
-    const area2 = getCourseArea(user2)
-    const sameArea = area1 && area2 && area1 === area2
-    const sameDegree = (user1.degreeProgram && user2.degreeProgram) &&
-      (user1.degreeProgram || '').trim().toLowerCase() === (user2.degreeProgram || '').trim().toLowerCase()
-    if (sameDegree) {
-      score += 0.15
-    } else if (sameArea) {
-      score += 0.1
-    }
-    factors += 0.15
-
-    // Primary: unified interests (ordered + additional) — 45% weight
-    const u1Interests = [...parseCommaSeparated(user1.orderedInterests || ''), ...parseCommaSeparated(user1.csInterests || '')]
-    const u2Interests = [...parseCommaSeparated(user2.orderedInterests || ''), ...parseCommaSeparated(user2.csInterests || '')]
-    const bothHavePrimary = u1Interests.some(i => i.toLowerCase().trim() === primaryInterest) &&
-      u2Interests.some(i => i.toLowerCase().trim() === primaryInterest)
-    if (bothHavePrimary) score += 0.225
-    const interestOverlap = u1Interests.filter(i => u2Interests.some(i2 => i.toLowerCase().trim() === i2.toLowerCase().trim())).length
-    const interestUnion = new Set([...u1Interests.map(i => i.toLowerCase()), ...u2Interests.map(i => i.toLowerCase())]).size
-    if (interestUnion > 0) score += (interestOverlap / interestUnion) * 0.225
-    factors += 0.45
-
-    // Technical skills match (18%)
-    const user1Tech = parseCommaSeparated(user1.technicalSkills || '')
-    const user2Tech = parseCommaSeparated(user2.technicalSkills || '')
-    const techIntersection = user1Tech.filter(t =>
-      user2Tech.some(t2 => t.toLowerCase().trim() === t2.toLowerCase().trim())
-    ).length
-    const techUnion = new Set([...user1Tech, ...user2Tech]).size
-    if (techUnion > 0) score += (techIntersection / techUnion) * 0.18
-    factors += 0.18
-
-    // Research interests match (12%)
-    const user1Research = parseCommaSeparated(user1.researchInterests || '')
-    const user2Research = parseCommaSeparated(user2.researchInterests || '')
-    const researchIntersection = user1Research.filter(r =>
-      user2Research.some(r2 => r.toLowerCase().trim() === r2.toLowerCase().trim())
-    ).length
-    const researchUnion = new Set([...user1Research, ...user2Research]).size
-    if (researchUnion > 0) score += (researchIntersection / researchUnion) * 0.12
-    factors += 0.12
-
-    // Learning style match (5%)
-    if (user1.preferredLearningStyle && user2.preferredLearningStyle) {
-      if (user1.preferredLearningStyle === user2.preferredLearningStyle) score += 0.05
-    }
-    factors += 0.05
-
-    // Study hours preference match (5%)
-    if (user1.preferredStudyHours && user2.preferredStudyHours) {
-      if (user1.preferredStudyHours === user2.preferredStudyHours) score += 0.05
-    }
-    factors += 0.05
-
-    return factors > 0 ? score / factors : 0
-  }
-
-  const parseCommaSeparated = (str) => {
-    if (!str || typeof str !== 'string') return []
-    return str.split(',').map(item => item.trim()).filter(item => item.length > 0)
-  }
-
-  // Derive course area from degree program or use profile courseArea for better group tailoring
-  const getCourseArea = (user) => {
-    const area = (user?.courseArea || '').trim()
-    if (area) return area
-    const deg = (user?.degreeProgram || '').toLowerCase()
-    if (!deg) return ''
-    if (/law|llb|legal/.test(deg)) return 'Law'
-    if (/business|bba|commerce|accounting|finance|economics|marketing|hr|hospitality|tourism|logistics/.test(deg)) return 'Business & Management'
-    if (/computing|computer|information technology|software|bit|bcs/.test(deg)) return 'Computing & IT'
-    if (/education|b\.?ed|teaching/.test(deg)) return 'Education'
-    if (/humanities|literature|philosophy|history|arts/.test(deg)) return 'Humanities'
-    if (/nursing|health|medical|medicine/.test(deg)) return 'Health'
-    if (/agriculture|agri|environmental/.test(deg)) return 'Agriculture'
-    return 'Other'
-  }
 
   const getGroupSizeColor = (size) => {
     if (size >= 6) return '#10B981'
@@ -386,17 +208,21 @@ function StudyGroups() {
                   <button
                     type="button"
                     className="action-btn primary join-group-btn"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault()
                       e.stopPropagation()
-                      joinGroup(group.chatRoomId, user.id)
-                      const groupMembers = [user, ...group.members]
-                      navigate(`/groups/chat/${group.chatRoomId}`, {
-                        state: {
-                          groupName: `${group.name} Study Group`,
-                          groupMembers
-                        }
-                      })
+                      try {
+                        await joinGroupApi(group.chatRoomId, user.id)
+                        const groupMembers = [user, ...group.members]
+                        navigate(`/groups/chat/${group.chatRoomId}`, {
+                          state: {
+                            groupName: `${group.name} Study Group`,
+                            groupMembers
+                          }
+                        })
+                      } catch (err) {
+                        console.error('Failed to join group:', err)
+                      }
                     }}
                   >
                     Join Group

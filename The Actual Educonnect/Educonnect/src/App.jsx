@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { StudyProvider } from './contexts/StudyContext'
 import { NLPProvider } from './contexts/NLPContext'
 import { LearningFieldsProvider } from './contexts/LearningFieldsContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { AudioReader } from './components/AudioReader'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
@@ -235,7 +236,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </AuthProvider>
   )
 }

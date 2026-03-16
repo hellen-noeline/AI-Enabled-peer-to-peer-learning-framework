@@ -74,11 +74,11 @@ function Profile() {
       setLoading(true)
       const loadUserProfile = async () => {
         try {
+          const { getUsersApi } = await import('../api/usersApi')
           await loadDataset()
-          const allUsers = [
-            ...getDatasetUsers(),
-            ...JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-          ]
+          const datasetUsers = getDatasetUsers()
+          const apiUsers = await getUsersApi(user.id).catch(() => [])
+          const allUsers = [...datasetUsers, ...apiUsers]
           const foundUser = allUsers.find(u => u.id === id)
           if (foundUser) {
             setViewingUser(foundUser)

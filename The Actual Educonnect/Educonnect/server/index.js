@@ -7,6 +7,8 @@ import adminRoutes from './routes/admin.js'
 import datasetRoutes from './routes/dataset.js'
 import feedbackRoutes from './routes/feedback.js'
 import chatRoutes from './routes/chat.js'
+import groupsRoutes from './routes/groups.js'
+import dmRoutes from './routes/dm.js'
 import signupOptionsRoutes from './routes/signupOptions.js'
 import studyPlanRoutes from './routes/studyPlan.js'
 import quizRoutes from './routes/quiz.js'
@@ -29,6 +31,8 @@ app.use('/api/users', userRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/chat', chatRoutes)
+app.use('/api/groups', groupsRoutes)
+app.use('/api/dm', dmRoutes)
 app.use('/api', signupOptionsRoutes)
 app.use('/api', studyPlanRoutes)
 app.use('/api/quiz', quizRoutes)

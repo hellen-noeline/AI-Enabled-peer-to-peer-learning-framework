@@ -17,10 +17,7 @@ function AdminDashboard() {
     setLoading(true)
     getAdminUsersApi(user.email)
       .then((list) => setUsers(Array.isArray(list) ? list : []))
-      .catch(() => {
-        const stored = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-        setUsers(Array.isArray(stored) ? stored : [])
-      })
+      .catch(() => setUsers([]))
       .finally(() => setLoading(false))
   }, [isAdmin, user?.email])
 

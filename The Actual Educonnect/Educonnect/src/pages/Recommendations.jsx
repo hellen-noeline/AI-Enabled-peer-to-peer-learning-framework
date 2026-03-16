@@ -27,17 +27,15 @@ function Recommendations() {
     const loadRecommendations = async () => {
       try {
         setLoading(true)
+        const { getUsersApi } = await import('../api/usersApi')
         await loadDataset()
         const datasetUsers = getDatasetUsers()
-        const allUsers = [
-          ...datasetUsers,
-          ...JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-        ]
+        const apiUsers = await getUsersApi(user.id).catch(() => [])
+        const allUsers = [...datasetUsers, ...apiUsers]
 
-        // Collect unique degree programmes from dataset users (for optional filtering)
         const programmes = Array.from(
           new Set(
-            datasetUsers
+            allUsers
               .map(u => u.degreeProgram)
               .filter(p => p && typeof p === 'string' && p.trim().length > 0)
           )
@@ -52,10 +50,8 @@ function Recommendations() {
         setLoading(false)
       }
     }
-    
-    if (user) {
-      loadRecommendations()
-    }
+
+    if (user) loadRecommendations()
   }, [user])
 
   if (!user) return null

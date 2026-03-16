@@ -22,14 +22,8 @@ function AdminUsers() {
         setError('')
       })
       .catch((err) => {
-        setError(err.message || 'Failed to load users')
-        // Fallback: show users from localStorage when backend is unreachable
-        const stored = JSON.parse(localStorage.getItem('EduConnect_users') || '[]')
-        const fallback = Array.isArray(stored) ? stored : []
-        setUsers(fallback)
-        if (fallback.length > 0) {
-          setError('Backend unreachable. Showing users from this device. Start the backend for full data.')
-        }
+        setError(err.message || 'Failed to load users. Ensure the backend is running.')
+        setUsers([])
       })
       .finally(() => setLoading(false))
   }, [isAdmin, user?.email])
