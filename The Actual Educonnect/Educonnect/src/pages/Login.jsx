@@ -56,12 +56,7 @@ function Login() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div
-          className="login-header"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-        >
+        <div className="login-header">
           <div className="login-logo">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -87,108 +82,112 @@ function Login() {
               />
             </svg>
           </div>
-          <h1>Welcome to EduConnect</h1>
-          <p>Find your perfect study partner</p>
-        </motion.div>
+          <h1>EduConnect</h1>
+          <p className="login-tagline">Peer-to-peer learning platform</p>
+        </div>
 
         <motion.div
-          className="sign-in-as-selector"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          className="login-form-wrapper"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
         >
-          <span className="sign-in-as-label">Sign in as</span>
-          <div className="sign-in-as-options">
-            <button
-              type="button"
-              className={`sign-in-as-btn ${signInAs === 'user' ? 'active' : ''}`}
-              onClick={() => { setSignInAs('user'); setError(''); }}
-              aria-pressed={signInAs === 'user'}
-            >
-              User
-            </button>
-            <button
-              type="button"
-              className={`sign-in-as-btn ${signInAs === 'admin' ? 'active' : ''}`}
-              onClick={() => { setSignInAs('admin'); setError(''); }}
-              aria-pressed={signInAs === 'admin'}
-            >
-              Admin
-            </button>
-          </div>
-        </motion.div>
-
-        <form onSubmit={handleSubmit} className="login-form">
-          {error && (
-            <motion.div
-              className="error-message"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              {error}
-            </motion.div>
-          )}
-
           <motion.div
-            className="form-group"
+            className="sign-in-as-selector"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
+            <span className="sign-in-as-label">Account type</span>
+            <div className="sign-in-as-options">
+              <button
+                type="button"
+                className={`sign-in-as-btn ${signInAs === 'user' ? 'active' : ''}`}
+                onClick={() => { setSignInAs('user'); setError(''); }}
+                aria-pressed={signInAs === 'user'}
+              >
+                User
+              </button>
+              <button
+                type="button"
+                className={`sign-in-as-btn ${signInAs === 'admin' ? 'active' : ''}`}
+                onClick={() => { setSignInAs('admin'); setError(''); }}
+                aria-pressed={signInAs === 'admin'}
+              >
+                Admin
+              </button>
+            </div>
           </motion.div>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            {error && (
+              <motion.div
+                className="error-message"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <motion.div
+              className="form-group"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+              />
+            </motion.div>
+
+            <motion.div
+              className="form-group"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+            </motion.div>
+
+            <motion.button
+              type="submit"
+              className="login-button"
+              disabled={loading}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </motion.button>
+          </form>
 
           <motion.div
-            className="form-group"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
-          </motion.div>
-
-          <motion.button
-            type="submit"
-            className="login-button"
-            disabled={loading}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="login-footer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </motion.button>
-        </form>
-
-        <motion.div
-          className="login-footer"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <p>
-            Don't have an account? <Link to="/signup">Sign up</Link>
-          </p>
-          <p className="login-server-hint">
-            Sign in requires the backend server. Run <code>npm start</code> in the <code>server</code> folder first.
-          </p>
+            <p>
+              Don't have an account? <Link to="/signup">Create one</Link>
+            </p>
+          </motion.div>
         </motion.div>
       </motion.div>
     </div>

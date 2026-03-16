@@ -483,7 +483,7 @@ function SignUp() {
                     name="nationality"
                     value={formData.nationality}
                     onChange={handleChange}
-                    placeholder="e.g. Uganda, Kenya"
+                    placeholder="e.g. Ugandan, Kenyan"
                   />
                 </div>
                 <div className="form-group">
@@ -531,17 +531,16 @@ function SignUp() {
               <h2>Academic Information</h2>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Your course (for suggestions) *</label>
-                  <select
+                  <DropdownWithSpecify
                     name="courseArea"
+                    label="Your course (for suggestions)"
                     value={formData.courseArea}
+                    options={courseAreaOptions.filter((o) => o.value).map((o) => o.value)}
                     onChange={handleChange}
+                    placeholder="Select your course area"
+                    specifyPlaceholder="Type your course if not listed..."
                     required
-                  >
-                    {courseAreaOptions.map((opt) => (
-                      <option key={opt.value || 'blank'} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                  />
                   <p className="form-hint">We use this to suggest relevant resources and materials.</p>
                 </div>
                 <div className="form-group">
@@ -564,16 +563,21 @@ function SignUp() {
                 </div>
                 <div className="form-group">
                   <label>Degree Program</label>
-                  <select
+                  <input
+                    type="text"
                     name="degreeProgram"
                     value={formData.degreeProgram}
                     onChange={handleChange}
-                  >
-                    <option value="">Select your degree program</option>
+                    list="degree-program-suggestions"
+                    placeholder="Type your course or select from suggestions"
+                    autoComplete="off"
+                  />
+                  <datalist id="degree-program-suggestions">
                     {degreeProgramOptions.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                      <option key={opt} value={opt} />
                     ))}
-                  </select>
+                  </datalist>
+                  <p className="form-hint">If your course is not listed, type it in the field above.</p>
                 </div>
                 <div className="form-group">
                   <label>Credits Completed</label>
