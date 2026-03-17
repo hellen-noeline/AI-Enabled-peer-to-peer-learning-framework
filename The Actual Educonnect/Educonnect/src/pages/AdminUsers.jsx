@@ -29,8 +29,9 @@ function AdminUsers() {
   }, [isAdmin, user?.email])
 
   useEffect(() => {
+    if (!isAdmin || !user?.email) return
     loadUsers()
-  }, [loadUsers])
+  }, [isAdmin, user?.email, loadUsers])
 
   if (!isAdmin) {
     return (
@@ -69,13 +70,17 @@ function AdminUsers() {
         transition={{ duration: 0.4 }}
       >
         <div className="admin-users-header">
-          <h1>Registered Users</h1>
-          <p>All users who have signed up and are stored in the database</p>
-          <div className="admin-users-header-actions">
-            <Link to="/admin/dashboard" className="back-link">← Dashboard</Link>
-            <button type="button" className="admin-users-refresh" onClick={loadUsers} disabled={loading}>
-              {loading ? 'Loading…' : 'Refresh list'}
-            </button>
+          <div className="admin-users-header-top">
+            <div>
+              <h1>Registered Users</h1>
+              <p>All users who have signed up for EduConnect (including new signups)</p>
+            </div>
+            <div className="admin-users-actions">
+              <button type="button" className="admin-users-refresh" onClick={loadUsers} disabled={loading}>
+                {loading ? 'Loading…' : 'Refresh'}
+              </button>
+              <Link to="/admin/dashboard" className="back-link">← Dashboard</Link>
+            </div>
           </div>
         </div>
 
@@ -89,7 +94,7 @@ function AdminUsers() {
         {error && (
           <div className="admin-users-error">
             {error}
-            <small>Start the backend: cd backend, then run: pip install -r requirements.txt &amp; python app.py</small>
+            <small>Make sure the backend is running (npm start in the server folder)</small>
           </div>
         )}
 
@@ -106,8 +111,10 @@ function AdminUsers() {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
+                  <th>Degree / Course area</th>
                   <th>Role</th>
                   <th>Joined</th>
+                  <th>Last login</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,11 +128,15 @@ function AdminUsers() {
                     <td>{u.firstName} {u.lastName}</td>
                     <td>{u.email}</td>
                     <td>
-                      <span className={`role-badge ${u.role === 'admin' ? 'admin' : 'user'}`}>
-                        {u.role}
+                      <span className="admin-users-program">{u.degreeProgram || u.courseArea || '—'}</span>
+                    </td>
+                    <td>
+                      <span className={`role-badge ${(u.role || 'user') === 'admin' ? 'admin' : 'user'}`}>
+                        {u.role || 'user'}
                       </span>
                     </td>
                     <td>{formatDate(u.createdAt)}</td>
+                    <td>{formatDate(u.lastLoginTime)}</td>
                   </motion.tr>
                 ))}
               </tbody>
