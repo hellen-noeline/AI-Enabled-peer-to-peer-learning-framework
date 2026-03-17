@@ -15,16 +15,6 @@
  * - scoreBreakdown
  * - reasons
  */
-    score += rankedBonus * 0.1
-/*Interests → 40%
-Technical skills → 12%
-Soft skills → 8%
-Research interests → 8%
-Professional interests → 8%
-Hobbies → 5%
-Learning style → 5%
-Academic level → 4%*/
-
 export function getRecommendations(currentUser, allUsers, limit = null) {
   // Guard against missing or invalid input
   if (!currentUser || typeof currentUser !== 'object' || !Array.isArray(allUsers)) {
