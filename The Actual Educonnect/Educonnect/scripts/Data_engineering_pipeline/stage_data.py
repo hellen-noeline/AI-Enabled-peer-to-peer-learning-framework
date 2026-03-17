@@ -102,6 +102,8 @@ def read_json(file_path):
     with file_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
+"""The stage_students function cleans the raw student dataset by removing extra spaces, normalizing text fields, and standardizing gender values.
+It also normalizes the university name and converts gender values to uniform labels."""
 
 def stage_students(raw_students_csv, output_csv):
     rows, fieldnames = read_csv_rows(raw_students_csv)

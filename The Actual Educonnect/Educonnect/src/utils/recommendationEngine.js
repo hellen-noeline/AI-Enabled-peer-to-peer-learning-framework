@@ -15,6 +15,15 @@
  * - scoreBreakdown
  * - reasons
  */
+    score += rankedBonus * 0.1
+/*Interests → 40%
+Technical skills → 12%
+Soft skills → 8%
+Research interests → 8%
+Professional interests → 8%
+Hobbies → 5%
+Learning style → 5%
+Academic level → 4%*/
 
 export function getRecommendations(currentUser, allUsers, limit = null) {
   // Guard against missing or invalid input
@@ -121,6 +130,7 @@ function calculateContentSimilarity(user1, user2) {
   // Interests split into:
   // - General shared interests: 40%
   // - Ranked-interest bonus: 10%
+  
   compareList(interests1, interests2, 0.4)
 
   const rankedBonus = calculateRankedInterestBonus(user1, user2)
