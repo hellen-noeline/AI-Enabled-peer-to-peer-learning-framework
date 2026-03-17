@@ -277,7 +277,17 @@ function Feedback() {
 
         {isAdmin && (
           <div className="admin-feedback-section">
-            <h2>All User Feedback</h2>
+            <div className="admin-feedback-header">
+              <h2>All User Feedback</h2>
+              <button
+                type="button"
+                className="admin-feedback-refresh"
+                onClick={loadAllFeedbackForAdmin}
+                aria-label="Refresh feedback list"
+              >
+                Refresh
+              </button>
+            </div>
             {allFeedback.length === 0 ? (
               <p className="no-feedback-msg">No feedback submitted yet.</p>
             ) : (
@@ -291,7 +301,7 @@ function Feedback() {
                   >
                     <div className="admin-feedback-meta">
                       <span className="feedback-type">{feedbackTypes.find(t => t.value === feedback.type)?.label}</span>
-                      <span className="feedback-from">{feedback.userName} &lt;{feedback.userEmail}&gt;</span>
+                      <span className="feedback-from">{feedback.userName || 'User'} &lt;{feedback.userEmail || feedback.user_email || 'no email'}&gt;</span>
                       <span className="feedback-date">
                         {new Date(feedback.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
