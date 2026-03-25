@@ -6,6 +6,7 @@ import { NLPProvider } from './contexts/NLPContext'
 import { LearningFieldsProvider } from './contexts/LearningFieldsContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AudioReader } from './components/AudioReader'
+import AtlasBot from './components/AtlasBot'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import Dashboard from './pages/Dashboard'
@@ -214,7 +215,12 @@ function AppRoutes() {
         />
         <Route path="/" element={<Navigate to={user ? (user.role === 'admin' ? '/admin/dashboard' : '/dashboard') : '/login'} replace />} />
       </Routes>
-      {user && !isAuthPage && <AudioReader />}
+      {user && !isAuthPage && (
+        <>
+          <AudioReader />
+          <AtlasBot />
+        </>
+      )}
     </>
   )
 }
