@@ -20,6 +20,12 @@ const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
 const DEFAULT_HOURS_PER_DAY = 1.5
 const TARGET_WEEKLY_HOURS = 10
 
+const COURSE_AREA_TO_FIELDS = {
+  'Computing & IT': ['ai', 'ml', 'ds', 'nlp', 'cv', 'cyber', 'web'],
+  'Law': ['law'],
+  'Business & Management': ['business']
+}
+
 function parseList(str) {
   if (!str || typeof str !== 'string') return []
   return str.split(',').map((s) => s.trim()).filter(Boolean)
@@ -29,18 +35,36 @@ function parseList(str) {
  * Build weekly schedule: assign focus areas to each day based on weak topics,
  * fields with low/no final score, and ordered interests.
  */
-function buildSchedule(user) {
+function buildSchedule(user, recentActivities = []) {
   const weak = parseList(user.weakTopics || '').map((t) => t.toLowerCase())
   const ordered = parseList(user.orderedInterests || '')
+  
+  const recentTopics = []
+  if (Array.isArray(recentActivities)) {
+    for (const act of recentActivities) {
+      if (act.eventType === 'resource_viewed' && act.payload) {
+        const topic = act.payload.category || act.payload.title
+        if (topic) recentTopics.push(topic)
+      }
+    }
+  }
+  const uniqueRecent = [...new Set(recentTopics)].slice(0, 3)
   const fp = user.studyStats?.fieldProgress || {}
   const weeklyHours = user.studyStats?.weeklyHours || [0, 0, 0, 0, 0, 0, 0]
+
+  const area = (user.courseArea || '').trim()
+  const relevantFields = COURSE_AREA_TO_FIELDS[area] || []
 
   // Priority list: fields that need work (no final or final < 70%) then weak topics then ordered interests
   const needsWork = []
   FIELD_IDS.forEach((fid) => {
     const p = fp[fid]
     const finalScore = p?.finalScore
-    if (finalScore == null || finalScore < 70) needsWork.push({ id: fid, name: FIELD_NAMES[fid] || fid, score: finalScore })
+    const isRelevantOrStarted = relevantFields.includes(fid) || p != null
+
+    if (isRelevantOrStarted) {
+      if (finalScore == null || finalScore < 70) needsWork.push({ id: fid, name: FIELD_NAMES[fid] || fid, score: finalScore })
+    }
   })
   const orderedFieldIds = ordered
     .map((o) => {
@@ -52,11 +76,11 @@ function buildSchedule(user) {
       if (lower.includes('machine learning') || lower.includes('ml')) return 'ml'
       if (lower.includes('data science')) return 'ds'
       if (lower.includes('ai') || lower.includes('artificial')) return 'ai'
-      return null
+      return o
     })
     .filter(Boolean)
   const uniqueOrdered = [...new Set(orderedFieldIds)]
-  const priorityFields = [...needsWork.map((f) => f.name), ...uniqueOrdered.map((fid) => FIELD_NAMES[fid] || fid)]
+  const priorityFields = [...uniqueRecent, ...needsWork.map((f) => f.name), ...uniqueOrdered.map((fid) => FIELD_NAMES[fid] || fid)]
   const deduped = [...new Set(priorityFields)]
   if (deduped.length === 0) deduped.push('Your interests', 'Quizzes & resources')
 
@@ -80,17 +104,41 @@ function buildSchedule(user) {
 /**
  * Build improvement suggestions from fieldProgress, weak topics, and interests.
  */
-function buildSuggestions(user) {
+function buildSuggestions(user, recentActivities = []) {
   const suggestions = []
   const fp = user.studyStats?.fieldProgress || {}
   const weak = parseList(user.weakTopics || '')
   const strong = parseList(user.strongTopics || '')
+  
+  const recentTopics = []
+  if (Array.isArray(recentActivities)) {
+    for (const act of recentActivities) {
+      if (act.eventType === 'resource_viewed' && act.payload?.category) {
+        recentTopics.push(act.payload.category)
+      }
+    }
+  }
+  const uniqueRecent = [...new Set(recentTopics)].slice(0, 1)
+
+  if (uniqueRecent.length > 0) {
+    suggestions.push({
+      type: 'recent_activity',
+      message: `You recently explored ${uniqueRecent[0]}. Keep up the momentum!`,
+      priority: 1
+    })
+  }
+
+  const area = (user.courseArea || '').trim()
+  const relevantFields = COURSE_AREA_TO_FIELDS[area] || []
 
   FIELD_IDS.forEach((fid) => {
     const p = fp[fid]
     const name = FIELD_NAMES[fid] || fid
     const finalScore = p?.finalScore
     const proficiency = p?.proficiency
+
+    const isRelevantOrStarted = relevantFields.includes(fid) || p != null
+    if (!isRelevantOrStarted) return
 
     if (finalScore == null) {
       suggestions.push({
@@ -202,8 +250,17 @@ function applyCohortInsights(schedule, suggestions, user, cohortInsights) {
 /**
  * Add ML-based "next topic" suggestion when available.
  */
-function applyMLSuggestion(suggestions, mlNextTopic) {
+function applyMLSuggestion(suggestions, mlNextTopic, user) {
   if (!mlNextTopic?.fieldId || !mlNextTopic?.fieldName) return suggestions
+
+  const area = (user?.courseArea || '').trim()
+  const relevantFields = COURSE_AREA_TO_FIELDS[area] || []
+  const p = user?.studyStats?.fieldProgress?.[mlNextTopic.fieldId]
+  const isRelevantOrStarted = relevantFields.includes(mlNextTopic.fieldId) || p != null
+
+  // If the user has a specific course area, and this ML suggestion is outside of it (and they haven't started it), ignore it.
+  if (relevantFields.length > 0 && !isRelevantOrStarted) return suggestions
+
   suggestions.unshift({
     type: 'ml',
     fieldId: mlNextTopic.fieldId,
@@ -221,12 +278,12 @@ function applyMLSuggestion(suggestions, mlNextTopic) {
  * @param {{ fieldId: string, fieldName: string }} [mlNextTopic] - Optional: ML-predicted next topic from mlInference
  * @returns {{ schedule: Array, suggestions: Array, generatedAt: string }}
  */
-export function generateStudyPlan(user, cohortInsights = null, mlNextTopic = null) {
+export function generateStudyPlan(user, cohortInsights = null, mlNextTopic = null, recentActivities = []) {
   if (!user) return { schedule: [], suggestions: [], generatedAt: new Date().toISOString() }
-  let schedule = buildSchedule(user)
-  let suggestions = buildSuggestions(user)
+  let schedule = buildSchedule(user, recentActivities)
+  let suggestions = buildSuggestions(user, recentActivities)
   const applied = applyCohortInsights(schedule, suggestions, user, cohortInsights)
-  suggestions = applyMLSuggestion(applied.suggestions, mlNextTopic)
+  suggestions = applyMLSuggestion(applied.suggestions, mlNextTopic, user)
   return {
     schedule: applied.schedule,
     suggestions,

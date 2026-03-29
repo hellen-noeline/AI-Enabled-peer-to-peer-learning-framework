@@ -7,6 +7,7 @@ import Navigation from '../components/Navigation'
 import { IconCheck } from '../components/Icons'
 import { useLearningFields } from '../contexts/LearningFieldsContext'
 import { learningResources } from '../data/learningResources'
+import { logActivity } from '../api/activityApi'
 import {
   getPreferredCategoriesForUser,
   userWantsComputingCategories,
@@ -289,7 +290,10 @@ function LearningResources() {
           <span className="duration-badge">{resource.duration}</span>
         </div>
         <div className="resource-actions">
-          <a href={resource.link} target="_blank" rel="noopener noreferrer" className="resource-link" onClick={() => startStudySession()}>
+          <a href={resource.link} target="_blank" rel="noopener noreferrer" className="resource-link" onClick={() => {
+            startStudySession()
+            if (user?.id) logActivity(user.id, 'resource_viewed', { category: resource.category, title: resource.title, fieldId: field?.id })
+          }}>
             View Resource →
           </a>
           {field && (

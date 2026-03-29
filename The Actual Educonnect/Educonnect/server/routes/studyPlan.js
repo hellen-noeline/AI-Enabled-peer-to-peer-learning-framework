@@ -42,7 +42,22 @@ router.get('/users/:userId/study-plan', (req, res) => {
     const cohortInsights = buildCohortInsights(db)
     const mlFieldId = predictNextTopic(user)
     const mlNextTopic = mlFieldId ? { fieldId: mlFieldId, fieldName: FIELD_NAMES[mlFieldId] || mlFieldId } : null
-    const plan = generateStudyPlan(user, cohortInsights, mlNextTopic)
+    
+    let recentActivities = []
+    if (userId) {
+      try {
+        const recentActivitiesResp = db.prepare(`SELECT event_type, payload, created_at FROM activity_events WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`).all(userId)
+        recentActivities = recentActivitiesResp.map(a => ({
+          eventType: a.event_type,
+          payload: a.payload ? JSON.parse(a.payload) : null,
+          createdAt: a.created_at
+        }))
+      } catch (e) {
+        console.warn('Could not fetch activity_events', e)
+      }
+    }
+
+    const plan = generateStudyPlan(user, cohortInsights, mlNextTopic, recentActivities)
     res.json(plan)
   } catch (err) {
     console.error('Study plan error:', err)
@@ -58,7 +73,22 @@ router.post('/study-plan', (req, res) => {
     const cohortInsights = db ? buildCohortInsights(db) : null
     const mlFieldId = predictNextTopic(user)
     const mlNextTopic = mlFieldId ? { fieldId: mlFieldId, fieldName: FIELD_NAMES[mlFieldId] || mlFieldId } : null
-    const plan = generateStudyPlan(user, cohortInsights, mlNextTopic)
+
+    let recentActivities = []
+    if (db && user.id) {
+      try {
+        const recentActivitiesResp = db.prepare(`SELECT event_type, payload, created_at FROM activity_events WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`).all(user.id)
+        recentActivities = recentActivitiesResp.map(a => ({
+          eventType: a.event_type,
+          payload: a.payload ? JSON.parse(a.payload) : null,
+          createdAt: a.created_at
+        }))
+      } catch (e) {
+        console.warn('Could not fetch activity_events', e)
+      }
+    }
+
+    const plan = generateStudyPlan(user, cohortInsights, mlNextTopic, recentActivities)
     res.json(plan)
   } catch (err) {
     console.error('Study plan error:', err)
