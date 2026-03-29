@@ -7,6 +7,12 @@ import Navigation from '../components/Navigation'
 import { IconCheck } from '../components/Icons'
 import { useLearningFields } from '../contexts/LearningFieldsContext'
 import { learningResources } from '../data/learningResources'
+import {
+  getPreferredCategoriesForUser,
+  userWantsComputingCategories,
+  COMPUTING_CATEGORIES,
+  inferCategoriesFromDegreeProgram
+} from '../utils/resourcePersonalization'
 import '../styles/LearningResources.css'
 
 function getFieldForResource(resource, learningFields, resourceToField, categoryToField) {
@@ -23,14 +29,26 @@ function parseList(value) {
     .filter(Boolean)
 }
 
-const AREA_TO_CATEGORIES = {
-  'computing & it': ['ai', 'ml', 'ds', 'nlp', 'cv', 'dl', 'cyber', 'web', 'mobile'],
-  law: ['law'],
-  'business & management': ['business'],
-  education: ['education'],
-  humanities: ['humanities'],
-  health: ['health'],
-  agriculture: ['agriculture']
+function diverseRoundRobinResources(limit = 12) {
+  const byCat = {}
+  for (const r of learningResources) {
+    if (!byCat[r.category]) byCat[r.category] = []
+    byCat[r.category].push(r)
+  }
+  const cats = Object.keys(byCat).sort()
+  const out = []
+  while (out.length < limit) {
+    let added = false
+    for (const cat of cats) {
+      const bucket = byCat[cat]
+      if (bucket?.length && out.length < limit) {
+        out.push(bucket.shift())
+        added = true
+      }
+    }
+    if (!added) break
+  }
+  return out
 }
 
 function LearningResources() {
@@ -75,7 +93,8 @@ function LearningResources() {
   const orderedInterests = parseList(user?.orderedInterests)
   const additionalInterests = parseList(user?.csInterests)
   const combinedInterests = [...new Set([...orderedInterests, ...additionalInterests])]
-  const preferredCategories = AREA_TO_CATEGORIES[(user?.courseArea || '').trim().toLowerCase()] || []
+  const preferredCategories = getPreferredCategoriesForUser(user)
+  const allowComputing = userWantsComputingCategories(preferredCategories)
 
   const handleSearchSubmit = (e) => {
     e.preventDefault()
@@ -116,27 +135,55 @@ function LearningResources() {
     const basedOnSearch = learningResources
       .map((res) => {
         const text = `${res.title} ${res.description} ${res.category}`.toLowerCase()
-        const score = recentTerms.reduce((acc, term) => acc + (text.includes(term) ? 1 : 0), 0)
+        let score = recentTerms.reduce((acc, term) => acc + (text.includes(term) ? 1 : 0), 0)
+        if (!allowComputing && COMPUTING_CATEGORIES.includes(res.category)) score -= 50
         return { ...res, _score: score }
       })
       .filter((res) => res._score > 0)
       .sort((a, b) => b._score - a._score)
       .slice(0, 8)
+      .map(({ _score, ...res }) => res)
 
-    const weakAreaMatches = learningResources
-      .filter((res) => includesAny(`${res.title} ${res.description} ${res.category}`.toLowerCase(), weakTopics))
-      .slice(0, 8)
+    const weakAreaMatches =
+      weakTopics.length === 0
+        ? []
+        : learningResources
+            .filter((res) => {
+              if (!allowComputing && COMPUTING_CATEGORIES.includes(res.category)) return false
+              const text = `${res.title} ${res.description} ${res.category}`.toLowerCase()
+              return includesAny(text, weakTopics)
+            })
+            .sort((a, b) => {
+              const ap = preferredCategories.includes(a.category) ? 1 : 0
+              const bp = preferredCategories.includes(b.category) ? 1 : 0
+              return bp - ap
+            })
+            .slice(0, 8)
 
     const interestMatches = learningResources
-      .filter((res) => {
+      .map((res) => {
         const text = `${res.title} ${res.description} ${res.category}`.toLowerCase()
-        return includesAny(text, combinedInterests) || preferredCategories.includes(res.category)
+        let score = 0
+        if (preferredCategories.includes(res.category)) score += 12
+        if (includesAny(text, combinedInterests)) score += 6
+        const progHints = inferCategoriesFromDegreeProgram(user?.degreeProgram)
+        if (progHints.has(res.category)) score += 8
+        if (!allowComputing && COMPUTING_CATEGORIES.includes(res.category)) score -= 100
+        return { ...res, _score: score }
       })
-      .slice(0, 10)
+      .filter((res) => res._score > 0)
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 12)
+      .map(({ _score, ...res }) => res)
 
-    const fallback = learningResources
-      .filter((res) => preferredCategories.includes(res.category))
-      .slice(0, 8)
+    let fallback = learningResources.filter((res) => preferredCategories.includes(res.category))
+    if (!fallback.length && user?.degreeProgram) {
+      const fromDeg = inferCategoriesFromDegreeProgram(user.degreeProgram)
+      fallback = learningResources.filter((res) => fromDeg.has(res.category))
+    }
+    if (!fallback.length) {
+      fallback = diverseRoundRobinResources(12)
+    }
 
     const sections = []
     if (basedOnSearch.length > 0) {
@@ -170,13 +217,21 @@ function LearningResources() {
       sections.push({
         id: 'starter',
         title: 'Recommended to get you started',
-        subtitle: 'Starter resources from your field',
-        reasonLabel: 'Why this was recommended: popular starter resources for your field',
-        resources: dedupeById(fallback.length > 0 ? fallback : learningResources.slice(0, 8))
+        subtitle: 'Starter resources aligned to your programme and profile',
+        reasonLabel: 'Why this was recommended: matched your course area, programme, or interests from signup',
+        resources: dedupeById(fallback)
       })
     }
     return sections
-  }, [recentSearches, weakTopics.join(','), combinedInterests.join(','), preferredCategories.join(',')])
+  }, [
+    recentSearches,
+    weakTopics.join(','),
+    combinedInterests.join(','),
+    preferredCategories.join(','),
+    allowComputing,
+    user?.degreeProgram,
+    user?.courseArea
+  ])
 
   let finalResources = []
   if (normalizedSearchQuery) {

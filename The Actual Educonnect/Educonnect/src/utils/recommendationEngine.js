@@ -135,6 +135,9 @@ function calculateContentSimilarity(user1, user2) {
   compareList(parseCommaSeparated(user1.professionalInterests), parseCommaSeparated(user2.professionalInterests), 0.08)
   compareList(parseCommaSeparated(user1.hobbies), parseCommaSeparated(user2.hobbies), 0.05)
 
+  compareExact(user1.courseArea, user2.courseArea, 0.22)
+  compareExact(user1.degreeProgram, user2.degreeProgram, 0.12)
+
   compareExact(user1.preferredLearningStyle, user2.preferredLearningStyle, 0.05)
   compareExact(user1.studyPartnersPreferences, user2.studyPartnersPreferences, 0.03)
   if (user1.academicLevel != null || user2.academicLevel != null) {

@@ -254,6 +254,47 @@ function SignUp() {
         'Supply Chain & Logistics',
         'Hospitality & Tourism'
       ]
+    },
+    {
+      field: 'Education',
+      subFields: [
+        'Curriculum & Instruction',
+        'Educational Psychology',
+        'Special & Inclusive Education',
+        'Assessment & Evaluation',
+        'Educational Technology'
+      ]
+    },
+    {
+      field: 'Humanities',
+      subFields: [
+        'Philosophy',
+        'Literature & Languages',
+        'History',
+        'Cultural Studies',
+        'Theology & Religious Studies'
+      ]
+    },
+    {
+      field: 'Health',
+      subFields: [
+        'Nursing & Midwifery',
+        'Medicine & Surgery',
+        'Public Health',
+        'Pharmacy',
+        'Biomedical Sciences'
+      ]
+    },
+    {
+      field: 'Agriculture',
+      subFields: [
+        'Animal Science',
+        'Agronomy',
+        'Agricultural Economics',
+        'Food Science & Technology',
+        'Environmental Management',
+        'Crop Production'
+      ]
     }
   ]
   const INTEREST_TOPICS = INTEREST_FIELDS.flatMap(({ field, subFields }) => [field, ...subFields])
