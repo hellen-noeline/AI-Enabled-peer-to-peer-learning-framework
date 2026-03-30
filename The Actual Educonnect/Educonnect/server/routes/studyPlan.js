@@ -38,7 +38,10 @@ router.get('/users/:userId/study-plan', (req, res) => {
     const { userId } = req.params
     const db = req.db
     const row = db.prepare('SELECT id, weak_topics, strong_topics, course_area, ordered_interests, preferred_study_hours, preferred_learning_style, study_stats FROM users WHERE id = ?').get(userId)
-    const user = row ? rowToUser(row) : null
+    if (!row) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+    const user = rowToUser(row)
     const cohortInsights = buildCohortInsights(db)
     const mlFieldId = predictNextTopic(user)
     const mlNextTopic = mlFieldId ? { fieldId: mlFieldId, fieldName: FIELD_NAMES[mlFieldId] || mlFieldId } : null

@@ -15,13 +15,53 @@
  * - scoreBreakdown
  * - reasons
  */
+
+/** Dedupe merged dataset + API lists: same email can appear twice (dataset_* id vs real UUID). Prefer non-dataset users. */
+function dedupeUsersForMatching(users) {
+  if (!Array.isArray(users)) return []
+  const byId = new Map()
+  for (const u of users) {
+    if (!u || typeof u !== 'object' || u.id == null) continue
+    const id = String(u.id)
+    if (!byId.has(id)) byId.set(id, u)
+  }
+  const uniqueById = [...byId.values()]
+
+  const emailGroups = new Map()
+  for (const u of uniqueById) {
+    const email = (u.email || '').trim().toLowerCase()
+    const key = email || `__id:${String(u.id)}`
+    if (!emailGroups.has(key)) emailGroups.set(key, [])
+    emailGroups.get(key).push(u)
+  }
+
+  const out = []
+  for (const group of emailGroups.values()) {
+    if (group.length === 1) {
+      out.push(group[0])
+      continue
+    }
+    const best = group.reduce((a, b) => {
+      const aDs = String(a.id).startsWith('dataset_')
+      const bDs = String(b.id).startsWith('dataset_')
+      if (aDs && !bDs) return b
+      if (!aDs && bDs) return a
+      return a
+    })
+    out.push(best)
+  }
+  return out
+}
+
 export function getRecommendations(currentUser, allUsers, limit = null) {
   // Guard against missing or invalid input
   if (!currentUser || typeof currentUser !== 'object' || !Array.isArray(allUsers)) {
     return []
   }
 
-  const otherUsers = allUsers.filter(
+  const mergedUnique = dedupeUsersForMatching(allUsers)
+
+  const otherUsers = mergedUnique.filter(
     user =>
       user &&
       typeof user === 'object' &&

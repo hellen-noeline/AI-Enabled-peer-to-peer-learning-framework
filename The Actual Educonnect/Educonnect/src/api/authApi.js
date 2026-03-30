@@ -15,7 +15,7 @@ application and the backend API.
 */
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
-const SERVER_UNREACHABLE_MSG = `Cannot reach the server at ${import.meta.env.VITE_API_URL || 'http://localhost:5000'}. Sign in and sign up require the backend to be running. In the project's server folder run: npm install then npm start, then try again.`
+const SERVER_UNREACHABLE_MSG = `Cannot reach the server at ${import.meta.env.VITE_API_URL || 'http://localhost:5000'}. Check that the service is running and try again.`
 
 function isNetworkError(err) {
   if (!err) return false

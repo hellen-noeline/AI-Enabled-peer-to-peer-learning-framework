@@ -19,6 +19,7 @@ function Dashboard() {
   const navigate = useNavigate()
   const [recommendations, setRecommendations] = useState([])
   const [studyPlan, setStudyPlan] = useState({ schedule: [], suggestions: [], generatedAt: null })
+  const [studyPlanReady, setStudyPlanReady] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -51,7 +52,16 @@ function Dashboard() {
 
   useEffect(() => {
     if (!user) return
-    fetchStudyPlan(user).then(setStudyPlan).catch(() => setStudyPlan({ schedule: [], suggestions: [], generatedAt: null }))
+    setStudyPlanReady(false)
+    fetchStudyPlan(user)
+      .then((plan) => {
+        setStudyPlan(plan)
+        setStudyPlanReady(true)
+      })
+      .catch(() => {
+        setStudyPlan({ schedule: [], suggestions: [], generatedAt: null })
+        setStudyPlanReady(true)
+      })
   }, [user])
 
   if (!user) return null
@@ -195,8 +205,8 @@ function Dashboard() {
           ))}
         </div>
 
-        {/* Study Plan – schedule + improvement suggestions (learns from your stats) */}
-        {(studyPlan.schedule?.length > 0 || studyPlan.suggestions?.length > 0) && (
+        {/* Study Plan – weekly focus (timetable) + suggestions; always show block after load so it isn’t “invisible” */}
+        {studyPlanReady && (
           <motion.div
             className="study-plan-section"
             initial={{ opacity: 0, y: 20 }}
@@ -205,40 +215,48 @@ function Dashboard() {
           >
             <h2>Your Study Plan</h2>
             <p className="study-plan-hint">Personalised from your profile and quiz progress; we keep adjusting as you use the app.</p>
-            <div className="study-plan-grid">
-              {studyPlan.schedule?.length > 0 && (
-                <div className="study-plan-card schedule-card">
-                  <h3>This week</h3>
-                  <ul className="study-plan-schedule-list">
-                    {studyPlan.schedule.slice(0, 7).map((day, i) => (
-                      <li key={day.day}>
-                        <span className="schedule-day">{day.day}</span>
-                        <span className="schedule-focus">{day.focus}</span>
-                        {day.suggestedHours > 0 && <span className="schedule-hours">~{day.suggestedHours}h</span>}
-                        {day.alreadyLogged > 0 && <span className="schedule-logged">+{day.alreadyLogged}h logged</span>}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {studyPlan.suggestions?.length > 0 && (
-                <div className="study-plan-card suggestions-card">
-                  <h3>Suggestions</h3>
-                  <ul className="study-plan-suggestions-list">
-                    {studyPlan.suggestions.slice(0, 5).map((s, i) => (
-                      <li key={i} className={`suggestion-type-${s.type || 'info'}`}>
-                        {s.message}
-                        {s.fieldId && (
-                          <button type="button" className="suggestion-action" onClick={() => navigate('/resources')}>
-                            Resources →
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            {(studyPlan.schedule?.length > 0 || studyPlan.suggestions?.length > 0) ? (
+              <div className="study-plan-grid">
+                {studyPlan.schedule?.length > 0 && (
+                  <div className="study-plan-card schedule-card">
+                    <h3>This week</h3>
+                    <ul className="study-plan-schedule-list">
+                      {studyPlan.schedule.slice(0, 7).map((day) => (
+                        <li key={day.day}>
+                          <span className="schedule-day">{day.day}</span>
+                          <span className="schedule-focus">{day.focus}</span>
+                          {day.suggestedHours > 0 && <span className="schedule-hours">~{day.suggestedHours}h</span>}
+                          {day.alreadyLogged > 0 && <span className="schedule-logged">+{day.alreadyLogged}h logged</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {studyPlan.suggestions?.length > 0 && (
+                  <div className="study-plan-card suggestions-card">
+                    <h3>Suggestions</h3>
+                    <ul className="study-plan-suggestions-list">
+                      {studyPlan.suggestions.slice(0, 5).map((s, i) => (
+                        <li key={i} className={`suggestion-type-${s.type || 'info'}`}>
+                          {s.message}
+                          {s.fieldId && (
+                            <button type="button" className="suggestion-action" onClick={() => navigate('/resources')}>
+                              Resources →
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="study-plan-card schedule-card">
+                <p className="study-plan-hint" style={{ margin: 0 }}>
+                  No weekly plan loaded yet. Start the API server (port 5000), refresh the page, or log out and log in again so your account matches the database. If the server was offline, the app cannot build your schedule.
+                </p>
+              </div>
+            )}
           </motion.div>
         )}
 

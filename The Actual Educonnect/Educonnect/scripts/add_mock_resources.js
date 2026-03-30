@@ -70,9 +70,9 @@ for (const [category, topics] of Object.entries(categories)) {
     const duration = Math.floor(Math.random() * 8 + 2) + ' ' + ['weeks', 'hours', 'months'][Math.floor(Math.random() * 3)];
     const rating = (Math.random() * 0.5 + 4.4).toFixed(1);
 
-    const safeTopic = topic.replace(/ /g, '-').toLowerCase();
-    
-    const resourceStr = "  { id: " + startId++ + ", title: '" + title + "', category: '" + category + "', type: '" + type + "', provider: '" + provider + "', description: 'Explore key concepts and practical applications in " + topic + ". Ideal for " + difficulty.toLowerCase() + " learners seeking comprehensive knowledge.', link: 'https://example.com/course/" + safeTopic + "', difficulty: '" + difficulty + "', duration: '" + duration + "', rating: " + rating + " }";
+    const searchLink = 'https://www.coursera.org/search?query=' + encodeURIComponent(topic);
+
+    const resourceStr = "  { id: " + startId++ + ", title: '" + title + "', category: '" + category + "', type: '" + type + "', provider: '" + provider + "', description: 'Explore key concepts and practical applications in " + topic + ". Ideal for " + difficulty.toLowerCase() + " learners seeking comprehensive knowledge.', link: '" + searchLink + "', difficulty: '" + difficulty + "', duration: '" + duration + "', rating: " + rating + " }";
     
     newResourcesText.push(resourceStr);
   }

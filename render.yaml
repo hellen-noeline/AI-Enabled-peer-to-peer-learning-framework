@@ -1,0 +1,19 @@
+# Render Blueprint — https://render.com/docs/infrastructure-as-code
+# After push: Render dashboard → New → Blueprint → connect repo, or link this file.
+# Then in Netlify (site → Environment): VITE_API_URL=https://<this-service-name>.onrender.com
+services:
+  - type: web
+    name: educonnect-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: The Actual Educonnect/Educonnect/server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Optional: persist SQLite on a paid disk mount — set path to match mount
+      # - key: EDUCONNECT_DB_PATH
+      #   value: /var/data/educonnect.db

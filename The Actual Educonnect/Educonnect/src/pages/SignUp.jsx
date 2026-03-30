@@ -1,11 +1,81 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { fetchSignupOptions, submitSignupSuggestion } from '../api/signupOptionsApi'
 import DropdownWithSpecify from '../components/DropdownWithSpecify'
-import TagsInputWithDropdown from '../components/TagsInputWithDropdown'
 import '../styles/SignUp.css'
+
+function MultiSelectDropdown({ name, label, value, options, onChange, hint, required }) {
+  const selected = value
+    ? value.split(',').map((s) => s.trim()).filter(Boolean)
+    : []
+  return (
+    <div className="form-group full-width">
+      <label>
+        {label}
+        {required && ' *'}
+      </label>
+      {hint && <p className="form-hint">{hint}</p>}
+      <select
+        name={name}
+        multiple
+        className="signup-multi-select"
+        size={5}
+        value={selected}
+        onChange={(e) => {
+          const opts = [...e.target.selectedOptions].map((o) => o.value)
+          onChange({ target: { name, value: opts.join(', ') } })
+        }}
+      >
+        {(options || []).map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+const DISCIPLINE_TRACKS = [
+  'Computing & IT',
+  'Law',
+  'Business & Management',
+  'Education',
+  'Humanities',
+  'Health',
+  'Agriculture',
+  'Engineering',
+  'Social Sciences',
+  'Creative Arts',
+  'Other'
+]
+
+const LEARNING_PATHWAYS = [
+  'Research-oriented',
+  'Career / industry focused',
+  'Exam-focused',
+  'Balanced',
+  'Exploratory / undecided'
+]
+
+const MODULE_PATHWAYS = [
+  'Core / foundation modules',
+  'Thesis or dissertation track',
+  'Internship or placement track',
+  'Elective-heavy pathway',
+  'Professional certification prep',
+  'Not sure yet'
+]
+
+function buildOrderedInterestsFromRanks(form) {
+  const parts = [form.disciplineTrack, form.interestRank1, form.interestRank2, form.interestRank3]
+    .map((x) => (x || '').trim())
+    .filter(Boolean)
+  return [...new Set(parts)]
+}
 
 function SignUp() {
   const navigate = useNavigate()
@@ -15,7 +85,21 @@ function SignUp() {
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(1)
   const [signupOptions, setSignupOptions] = useState({})
+  const { setTheme } = useTheme()
   const totalSteps = signUpAs === 'admin' ? 1 : 4
+  const previousThemeRef = useRef(null)
+
+  useEffect(() => {
+    try {
+      previousThemeRef.current = localStorage.getItem('EduConnect_theme') || 'dark'
+    } catch {
+      previousThemeRef.current = 'dark'
+    }
+    setTheme('light')
+    return () => {
+      if (previousThemeRef.current) setTheme(previousThemeRef.current)
+    }
+  }, [setTheme])
 
   useEffect(() => {
     let cancelled = false
@@ -69,7 +153,15 @@ function SignUp() {
     
     // Profile
     bio: '',
-    profilePicture: ''
+    profilePicture: '',
+
+    // Step 3 — built into orderedInterests / csInterests at submit (not separate DB columns)
+    disciplineTrack: '',
+    interestRank1: '',
+    interestRank2: '',
+    interestRank3: '',
+    learningPathway: '',
+    modulePathway: ''
   })
 
   const handleChange = (e) => {
@@ -98,8 +190,10 @@ function SignUp() {
                formData.password === formData.confirmPassword
       case 2:
         return formData.university && formData.courseArea
-      case 3:
-        return orderedInterestsList.length > 0
+      case 3: {
+        const built = buildOrderedInterestsFromRanks(formData)
+        return built.length > 0 && !!(formData.disciplineTrack && formData.interestRank1)
+      }
       case 4:
         return true
       default:
@@ -109,11 +203,22 @@ function SignUp() {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
+      setError('')
       if (currentStep < totalSteps) {
-        setCurrentStep(currentStep + 1)
+        setCurrentStep((s) => s + 1)
       }
     } else {
       setError('Please fill in all required fields')
+    }
+  }
+
+  const handleFormKeyDown = (e) => {
+    if (e.key !== 'Enter' || e.repeat) return
+    if (e.target.tagName === 'TEXTAREA') return
+    if (signUpAs === 'admin') return
+    if (currentStep < totalSteps) {
+      e.preventDefault()
+      handleNext()
     }
   }
 
@@ -126,6 +231,11 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (signUpAs === 'user' && currentStep !== totalSteps) {
+      setError('Please complete all steps before creating your account.')
+      return
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -145,6 +255,14 @@ function SignUp() {
     setLoading(true)
 
     try {
+      const orderedInterests = buildOrderedInterestsFromRanks(formData).join(', ')
+      const csParts = [
+        ...(formData.learningPathway ? [formData.learningPathway.trim()] : []),
+        ...(formData.modulePathway ? [formData.modulePathway.trim()] : []),
+        ...(formData.csInterests || '').split(',').map((s) => s.trim()).filter(Boolean)
+      ]
+      const csInterests = [...new Set(csParts)].join(', ')
+
       // Teach the model: submit any custom (non-predefined) values so they become options later
       const singleValueFields = [
         'university', 'degreeProgram', 'nationality', 'countryOfResidence',
@@ -158,8 +276,21 @@ function SignUp() {
           submitSignupSuggestion(field, value).catch(() => {})
         }
       }
-      // Remove confirmPassword before saving
-      const { confirmPassword, ...userData } = formData
+      const {
+        confirmPassword,
+        disciplineTrack,
+        interestRank1,
+        interestRank2,
+        interestRank3,
+        learningPathway,
+        modulePathway,
+        ...rest
+      } = formData
+      const userData = {
+        ...rest,
+        orderedInterests,
+        csInterests
+      }
       const newUser = await signup(userData)
       localStorage.setItem('EduConnect_lastEmail', (formData.email || '').trim())
       navigate(newUser.role === 'admin' ? '/admin/dashboard' : '/dashboard')
@@ -204,6 +335,9 @@ function SignUp() {
     { value: 'Humanities', label: 'Humanities' },
     { value: 'Health', label: 'Health' },
     { value: 'Agriculture', label: 'Agriculture' },
+    { value: 'Engineering', label: 'Engineering' },
+    { value: 'Social Sciences', label: 'Social Sciences' },
+    { value: 'Creative Arts', label: 'Creative Arts' },
     { value: 'Other', label: 'Other' }
   ]
 
@@ -295,38 +429,43 @@ function SignUp() {
         'Environmental Management',
         'Crop Production'
       ]
+    },
+    {
+      field: 'Engineering',
+      subFields: [
+        'Civil Engineering',
+        'Mechanical Engineering',
+        'Electrical Engineering',
+        'Chemical Engineering',
+        'Aerospace Engineering'
+      ]
+    },
+    {
+      field: 'Social Sciences',
+      subFields: [
+        'Sociology',
+        'Psychology',
+        'Political Science',
+        'Anthropology',
+        'International Relations'
+      ]
+    },
+    {
+      field: 'Creative Arts',
+      subFields: [
+        'Fine Arts',
+        'Design',
+        'Music',
+        'Film Studies',
+        'Performing Arts'
+      ]
     }
   ]
   const INTEREST_TOPICS = INTEREST_FIELDS.flatMap(({ field, subFields }) => [field, ...subFields])
-
-  const orderedInterestsList = formData.orderedInterests
-    ? formData.orderedInterests.split(',').map((s) => s.trim()).filter(Boolean)
-    : []
-
-  const toggleInterest = (topic) => {
-    if (orderedInterestsList.includes(topic)) {
-      setFormData((prev) => ({
-        ...prev,
-        orderedInterests: orderedInterestsList.filter((t) => t !== topic).join(', ')
-      }))
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        orderedInterests: [...orderedInterestsList, topic].join(', ')
-      }))
-    }
-  }
-
-  const moveInterest = (index, direction) => {
-    const next = [...orderedInterestsList]
-    const newIndex = direction === 'up' ? index - 1 : index + 1
-    if (newIndex < 0 || newIndex >= next.length) return
-    ;[next[index], next[newIndex]] = [next[newIndex], next[index]]
-    setFormData((prev) => ({ ...prev, orderedInterests: next.join(', ') }))
-  }
+  const interestRankOptions = [...INTEREST_TOPICS].sort((a, b) => a.localeCompare(b))
 
   return (
-    <div className="signup-container">
+    <div className="signup-container signup-page-light">
       <motion.div
         className="signup-card"
         initial={{ opacity: 0, y: 20 }}
@@ -374,7 +513,7 @@ function SignUp() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="signup-form">
+        <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="signup-form">
           {error && (
             <motion.div
               className="error-message"
@@ -562,7 +701,7 @@ function SignUp() {
           )}
 
           {/* Step 2: Academic Information */}
-          {currentStep === 2 && (
+          {signUpAs === 'user' && currentStep === 2 && (
             <motion.div
               className="form-step"
               initial={{ opacity: 0, x: 20 }}
@@ -660,8 +799,8 @@ function SignUp() {
             </motion.div>
           )}
 
-          {/* Step 3: Interests & Skills */}
-          {currentStep === 3 && (
+          {/* Step 3: Interests & Skills — compact dropdowns */}
+          {signUpAs === 'user' && currentStep === 3 && (
             <motion.div
               className="form-step"
               initial={{ opacity: 0, x: 20 }}
@@ -669,128 +808,164 @@ function SignUp() {
               exit={{ opacity: 0, x: -20 }}
             >
               <h2>Interests & Skills</h2>
+              <p className="form-hint" style={{ marginBottom: '1rem' }}>
+                Choose your discipline and ranked interests (hold Ctrl or Cmd to pick several in the multi-select lists). We use this to personalise suggestions.
+              </p>
 
-              <div className="form-group full-width" style={{ marginBottom: '1.5rem' }}>
-                <label>Interests (order from most to least relevant) *</label>
-                <p className="form-hint">Select fields and sub-fields that apply, then order your list: first = most relevant. We use this to personalise suggestions.</p>
-                <div className="interests-by-field">
-                  {INTEREST_FIELDS.map(({ field, subFields }) => (
-                    <div key={field} className="interest-field-group">
-                      <div className="interest-field-heading">{field}</div>
-                      <div className="interests-checkbox-list">
-                        <label key={field} className="interest-checkbox-label field-option">
-                          <input
-                            type="checkbox"
-                            checked={orderedInterestsList.includes(field)}
-                            onChange={() => toggleInterest(field)}
-                          />
-                          <span>General interest in this field</span>
-                        </label>
-                        {subFields.map((sub) => (
-                          <label key={sub} className="interest-checkbox-label subfield-option">
-                            <input
-                              type="checkbox"
-                              checked={orderedInterestsList.includes(sub)}
-                              onChange={() => toggleInterest(sub)}
-                            />
-                            <span>{sub}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="signup-step3-grid">
+                <div className="form-group">
+                  <label>Primary discipline / school *</label>
+                  <select
+                    name="disciplineTrack"
+                    value={formData.disciplineTrack}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select discipline</option>
+                    {DISCIPLINE_TRACKS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
-                {orderedInterestsList.length > 0 && (
-                  <div className="ordered-interests-list">
-                    <span className="ordered-label">Your order (most relevant first — use arrows to reorder):</span>
-                    <ul className="ordered-interests-ul">
-                      {orderedInterestsList.map((topic, index) => (
-                        <li key={topic} className="ordered-interest-item">
-                          <span className="order-num">{index + 1}.</span>
-                          <span>{topic}</span>
-                          <span className="order-buttons">
-                            <button type="button" onClick={() => moveInterest(index, 'up')} disabled={index === 0} aria-label="Move up">↑</button>
-                            <button type="button" onClick={() => moveInterest(index, 'down')} disabled={index === orderedInterestsList.length - 1} aria-label="Move down">↓</button>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className="form-group">
+                  <label>Learning pathway</label>
+                  <select
+                    name="learningPathway"
+                    value={formData.learningPathway}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select (optional)</option>
+                    {LEARNING_PATHWAYS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Module / programme focus</label>
+                  <select
+                    name="modulePathway"
+                    value={formData.modulePathway}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select (optional)</option>
+                    {MODULE_PATHWAYS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Top interest (most relevant) *</label>
+                  <select
+                    name="interestRank1"
+                    value={formData.interestRank1}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select topic</option>
+                    {interestRankOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Second interest</label>
+                  <select
+                    name="interestRank2"
+                    value={formData.interestRank2}
+                    onChange={handleChange}
+                  >
+                    <option value="">Optional</option>
+                    {interestRankOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Third interest</label>
+                  <select
+                    name="interestRank3"
+                    value={formData.interestRank3}
+                    onChange={handleChange}
+                  >
+                    <option value="">Optional</option>
+                    {interestRankOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className="form-grid">
-                <TagsInputWithDropdown
+              <div className="form-grid" style={{ marginTop: 'var(--spacing-md)' }}>
+                <MultiSelectDropdown
                   name="csInterests"
-                  label="Additional interests (optional)"
+                  label="Additional tags (optional)"
                   value={formData.csInterests}
                   options={signupOptions.csInterests || []}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
-                  placeholder="Any field: e.g. AI, Contract Law, Marketing"
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
-                <TagsInputWithDropdown
+                <MultiSelectDropdown
                   name="strongTopics"
-                  label="Strong Topics"
+                  label="Strong topics"
                   value={formData.strongTopics}
                   options={getOptionsForField('strongTopics')}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
-                <TagsInputWithDropdown
+                <MultiSelectDropdown
                   name="weakTopics"
-                  label="Weak Topics"
+                  label="Weak topics"
                   value={formData.weakTopics}
                   options={getOptionsForField('weakTopics')}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
-                <TagsInputWithDropdown
+                <MultiSelectDropdown
                   name="technicalSkills"
-                  label="Technical Skills"
+                  label="Technical skills"
                   value={formData.technicalSkills}
                   options={getOptionsForField('technicalSkills')}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
-                <TagsInputWithDropdown
+                <MultiSelectDropdown
                   name="softSkills"
-                  label="Soft Skills"
+                  label="Soft skills"
                   value={formData.softSkills}
                   options={signupOptions.softSkills || []}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
-                <TagsInputWithDropdown
+                <MultiSelectDropdown
                   name="researchInterests"
-                  label="Research Interests"
+                  label="Research interests"
                   value={formData.researchInterests}
                   options={getOptionsForField('researchInterests')}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
-                <TagsInputWithDropdown
+                <MultiSelectDropdown
                   name="professionalInterests"
-                  label="Professional Interests"
+                  label="Professional interests"
                   value={formData.professionalInterests}
                   options={getOptionsForField('professionalInterests')}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
-                <TagsInputWithDropdown
+                <MultiSelectDropdown
                   name="hobbies"
                   label="Hobbies"
                   value={formData.hobbies}
                   options={signupOptions.hobbies || []}
                   onChange={handleChange}
-                  onSuggest={(field, value) => submitSignupSuggestion(field, value).catch(() => {})}
+                  hint="Hold Ctrl/Cmd to select multiple."
                 />
               </div>
             </motion.div>
           )}
 
           {/* Step 4: Study Preferences */}
-          {currentStep === 4 && (
+          {signUpAs === 'user' && currentStep === 4 && (
             <motion.div
               className="form-step"
               initial={{ opacity: 0, x: 20 }}
@@ -876,9 +1051,6 @@ function SignUp() {
         <div className="signup-footer">
           <p>
             Already have an account? <Link to="/login">Sign in</Link>
-          </p>
-          <p className="signup-server-hint">
-            Sign up requires the backend server. Run <code>npm start</code> in the <code>server</code> folder first.
           </p>
         </div>
       </motion.div>

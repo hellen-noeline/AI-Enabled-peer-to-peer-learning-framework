@@ -87,6 +87,9 @@ Desktop.ini
 *.sqlite
 *.sqlite3
 
+# === Netlify CLI (local paths; keep committed netlify.toml at project root) ===
+**/.netlify/
+
 # === Misc (temp / user files) ===
 Untitled
 *.log

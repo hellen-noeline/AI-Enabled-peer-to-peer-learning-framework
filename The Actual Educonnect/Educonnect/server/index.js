@@ -45,8 +45,9 @@ app.get('/api/health', (req, res) => {
 async function start() {
   await initDb()
   ensureAdmin()
-  app.listen(PORT, () => {
-    console.log(`EduConnect server running at http://localhost:${PORT}`)
+  const host = process.env.HOST || '0.0.0.0'
+  app.listen(PORT, host, () => {
+    console.log(`EduConnect server listening on http://${host}:${PORT}`)
   })
 }
 

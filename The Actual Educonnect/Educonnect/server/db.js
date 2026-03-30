@@ -1,10 +1,23 @@
 import initSqlJs from 'sql.js'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const dbPath = path.join(__dirname, 'educonnect.db')
+const dbPath = process.env.EDUCONNECT_DB_PATH
+  ? path.resolve(process.env.EDUCONNECT_DB_PATH)
+  : process.env.EDUCONNECT_DATA_DIR
+    ? path.join(path.resolve(process.env.EDUCONNECT_DATA_DIR), 'educonnect.db')
+    : path.join(__dirname, 'educonnect.db')
+
+const dbDir = path.dirname(dbPath)
+if (!existsSync(dbDir)) {
+  try {
+    mkdirSync(dbDir, { recursive: true })
+  } catch (e) {
+    console.warn('Could not create DB directory:', dbDir, e.message)
+  }
+}
 
 let db = null
 
