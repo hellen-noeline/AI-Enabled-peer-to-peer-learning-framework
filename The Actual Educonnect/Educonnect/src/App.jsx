@@ -46,7 +46,7 @@ function AdminRoute({ children }) {
 }
 
 function AppRoutes() {
-  const { user, showWelcome, setShowWelcome, loading } = useAuth()
+  const { user, showWelcome, setShowWelcome, loading, isAdmin } = useAuth()
   const location = useLocation()
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup'
 
@@ -77,9 +77,10 @@ function AppRoutes() {
         </a>
       )}
       {showWelcome && user && (
-        <WelcomeMessage 
-          name={user.firstName} 
-          onClose={() => setShowWelcome(false)} 
+        <WelcomeMessage
+          name={user.firstName}
+          isAdmin={isAdmin}
+          onClose={() => setShowWelcome(false)}
         />
       )}
       <Routes>

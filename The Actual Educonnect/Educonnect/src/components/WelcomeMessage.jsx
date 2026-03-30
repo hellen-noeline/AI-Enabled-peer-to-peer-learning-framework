@@ -2,7 +2,7 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import '../styles/WelcomeMessage.css'
 
-function WelcomeMessage({ name, onClose }) {
+function WelcomeMessage({ name, isAdmin = false, onClose }) {
   return (
     <AnimatePresence>
       <motion.div
@@ -56,17 +56,24 @@ function WelcomeMessage({ name, onClose }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            Welcome, {name}! 
+            Welcome, {name}!
+            {isAdmin && (
+              <span className="welcome-admin-badge" aria-label="Administrator">
+                Administrator
+              </span>
+            )}
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            Ready to find your perfect study partner?
+            {isAdmin
+              ? 'You are signed in to the EduConnect admin console. Manage users, quizzes, learning resources, and assessments from here.'
+              : 'Ready to find your perfect study partner?'}
           </motion.p>
-          
+
           <motion.button
             className="welcome-button"
             onClick={onClose}
@@ -76,7 +83,7 @@ function WelcomeMessage({ name, onClose }) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            Let's Go!
+            {isAdmin ? 'Continue to admin' : "Let's Go!"}
           </motion.button>
         </motion.div>
       </motion.div>

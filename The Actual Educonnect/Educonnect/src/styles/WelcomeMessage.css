@@ -45,6 +45,15 @@
   letter-spacing: -0.5px;
 }
 
+.welcome-admin-badge {
+  display: block;
+  font-size: 0.55em;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  margin-top: 0.35em;
+}
+
 .welcome-card p {
   font-size: 16px;
   color: var(--text-secondary);

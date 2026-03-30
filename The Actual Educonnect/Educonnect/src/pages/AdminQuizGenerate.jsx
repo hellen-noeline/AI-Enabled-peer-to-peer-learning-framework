@@ -67,7 +67,6 @@ function AdminQuizGenerate() {
       <div className="admin-dashboard-content">
         <div className="admin-dashboard-header">
           <h1>AI Quiz Generator</h1>
-          <p>Generate a full learning field (3 quizzes + final test) using local AI (KeyBERT + T5). Text preprocessing, keyword extraction, and question generation run on your machine—no API key needed. Saved automatically; appears on Resources and Quiz hub.</p>
         </div>
 
         <form onSubmit={handleGenerate} style={{ maxWidth: '480px', marginBottom: '1.5rem' }}>
@@ -115,7 +114,7 @@ function AdminQuizGenerate() {
           </div>
           {error && <p style={{ color: '#ef4444', marginBottom: '0.5rem' }}>{error}</p>}
           <button type="submit" disabled={loading} style={{ padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer' }}>
-            {loading ? 'Generating… (KeyBERT + T5, first run may download models)' : 'Generate full field'}
+            {loading ? 'Generating…' : 'Generate'}
           </button>
         </form>
 
@@ -136,10 +135,6 @@ function AdminQuizGenerate() {
             </pre>
           </div>
         )}
-
-        <p style={{ marginTop: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>
-          Requires Python backend running: <code>cd backend && python app.py</code>. Uses KeyBERT (BERT) for keyword extraction and T5 for question generation. No API key or cost.
-        </p>
       </div>
     </div>
   )
