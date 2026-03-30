@@ -1,0 +1,19 @@
+# After the Render service exists: Settings → Deploy Hook → copy URL.
+# Add GitHub secret RENDER_DEPLOY_HOOK_URL, then run this workflow manually (Actions tab).
+name: Trigger Render deploy
+on:
+  workflow_dispatch:
+
+jobs:
+  notify-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "Add secret RENDER_DEPLOY_HOOK_URL in repo Settings → Secrets to enable."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" -d ''
