@@ -42,7 +42,9 @@ export function LearningFieldsProvider({ children }) {
       .catch(() => setGenerated([]))
   }, [])
 
-  const learningFields = [...staticFields, ...generated]
+  const generatedIds = new Set((generated || []).map((f) => f.id))
+  const staticOnly = (staticFields || []).filter((f) => !generatedIds.has(f.id))
+  const learningFields = [...staticOnly, ...(generated || [])]
   const resourceToField = buildResourceToField(learningFields)
   const categoryToField = buildCategoryToField(learningFields)
 

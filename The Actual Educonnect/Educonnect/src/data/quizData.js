@@ -487,11 +487,19 @@ export const learningFields = [
         { id: 'f10', question: 'A business plan typically includes:', options: ['Only financials', 'Executive summary, market analysis, strategy, and financial projections', 'Only mission'], correct: 1 }
       ]
     }
-  }
+  },
+  // Stub fields for categories with learning resources; quizzes generated on-demand from resources
+  { id: 'agriculture', name: 'Agriculture', description: 'Sustainable farming, crop science, agribusiness', resourceIds: [67, 68, 69, 70, 71], quizzes: [], finalTest: null },
+  { id: 'education', name: 'Education', description: 'Teaching, curriculum design, assessment', resourceIds: [52, 53, 54, 55, 56], quizzes: [], finalTest: null },
+  { id: 'humanities', name: 'Humanities', description: 'Philosophy, literature, critical thinking', resourceIds: [57, 58, 59, 60, 61], quizzes: [], finalTest: null },
+  { id: 'health', name: 'Health', description: 'Nursing, public health, medical ethics', resourceIds: [62, 63, 64, 65, 66], quizzes: [], finalTest: null }
 ]
 
 // Map resource category to field for resources not in resourceIds
-export const categoryToField = { ai: 'ai', ml: 'ml', ds: 'ds', nlp: 'nlp', cv: 'cv', cyber: 'cyber', web: 'web', dl: 'ml', mobile: 'web', law: 'law', business: 'business' }
+export const categoryToField = {
+  ai: 'ai', ml: 'ml', ds: 'ds', nlp: 'nlp', cv: 'cv', cyber: 'cyber', web: 'web', dl: 'ml', mobile: 'web',
+  law: 'law', business: 'business', education: 'education', humanities: 'humanities', health: 'health', agriculture: 'agriculture'
+}
 
 // Map resourceId -> field object for quick lookup
 export const resourceToField = {}

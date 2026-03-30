@@ -7,3 +7,14 @@ transformers>=4.30.0
 torch>=2.0.0
 umap-learn>=0.5.0
 hdbscan>=0.8.0
+## Local quiz generator: keyword extraction, question generation
+keybert>=0.8.0
+## Flan-T5 training & evaluation
+datasets>=2.14.0
+accelerate>=0.20.0
+nltk>=3.8.0
+rouge-score>=0.1.2
+## Training/eval: visuals
+matplotlib>=3.7.0
+## Optional: BERTScore for eval (pip install bert-score)
+## bert-score>=0.3.13

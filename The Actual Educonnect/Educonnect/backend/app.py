@@ -14,6 +14,14 @@ from sentence_transformers import SentenceTransformer  ##embeds text into a vect
 ##These functions come from the database and run different database functions
 from database import init_db, get_user_by_email, get_all_users, create_user, update_user, get_user_by_id, merge_user_profile
 
+# Local quiz generator (no OpenAI API): text preprocessing, KeyBERT, T5
+from quiz_generator import (
+    generate_quiz_from_text,
+    generate_from_resources,
+    build_text_from_resources,
+)
+from load_learning_resources import get_learning_resources
+
 # Path to Colab-trained intent model (download from Drive/Desktop and place here to use it)
 # Supports: backend/models/intent, backend/models/intent_advanced, or env TRAINED_INTENT_MODEL_DIR
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +34,7 @@ def _default_intent_model_dir():
 TRAINED_INTENT_MODEL_DIR = os.environ.get("TRAINED_INTENT_MODEL_DIR") or _default_intent_model_dir()
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5000", "http://127.0.0.1:5000"])
 
 # List of users who have admin previledges
 ADMIN_EMAILS = ['admin@educonnect.com']
@@ -309,6 +317,58 @@ def atlas_intent():
         })
     except Exception as e:
         return jsonify({"intent": "out_of_scope", "confidence": 0.0, "error": str(e)}), 200
+
+
+# --- Local Quiz Generator (no OpenAI API) ---
+@app.route("/api/quiz/generate", methods=["POST"])
+def api_quiz_generate():
+    """
+    Generate quizzes from text or resources using local AI (KeyBERT + T5).
+    Body: { text, fieldId, fieldName, resourceIds? } OR { resources: [{id, title, description}], fieldId, fieldName }
+    Returns: { id, name, description, resourceIds, quizzes, finalTest }
+    """
+    data = request.get_json() or {}
+    field_id = (data.get("fieldId") or data.get("field_id") or "").strip().lower().replace(" ", "-")
+    field_name = (data.get("fieldName") or data.get("field_name") or field_id).strip()
+    if not field_id:
+        return jsonify({"error": "fieldId is required"}), 400
+
+    resources = data.get("resources") or []
+    text = data.get("text") or ""
+    resource_ids = data.get("resourceIds") or data.get("resource_ids") or []
+
+    if resources:
+        text = build_text_from_resources(resources)
+        resource_ids = [r.get("id") for r in resources if r.get("id") is not None]
+    elif not text and field_id:
+        # Load from learning resources (includes quiz_source_text expansion)
+        all_res = get_learning_resources()
+        ids = resource_ids if resource_ids else []
+        if ids:
+            resources = [r for r in all_res if r.get("id") in ids]
+        else:
+            resources = [r for r in all_res if (r.get("category") or "").lower() == field_id.lower()]
+        if resources:
+            text = build_text_from_resources(resources)
+            resource_ids = [r.get("id") for r in resources if r.get("id") is not None]
+        else:
+            text = f"Topic: {field_name}. General knowledge."
+    if not text or len(text.strip()) < 20:
+        return jsonify({"error": "Provide 'text', 'resources', or ensure fieldId matches a category with resources"}), 400
+
+    try:
+        result = generate_quiz_from_text(
+            text=text,
+            field_id=field_id,
+            field_name=field_name,
+            resource_ids=resource_ids,
+            use_t5=True,
+        )
+        if "error" in result:
+            return jsonify(result), 400
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # --- Auth & Users ---

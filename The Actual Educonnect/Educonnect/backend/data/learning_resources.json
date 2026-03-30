@@ -1,0 +1,15 @@
+[
+  {"id":1,"title":"Introduction to Artificial Intelligence","category":"ai","description":"Comprehensive course covering AI fundamentals, search algorithms, and problem-solving techniques."},
+  {"id":2,"title":"Machine Learning by Andrew Ng","category":"ml","description":"The most popular ML course covering supervised learning, neural networks, and more."},
+  {"id":3,"title":"Deep Learning Specialization","category":"dl","description":"Master deep learning, neural networks, and build AI applications."},
+  {"id":4,"title":"Data Science with Python","category":"ds","description":"Learn data analysis, visualization, and machine learning with Python."},
+  {"id":5,"title":"Natural Language Processing with Deep Learning","category":"nlp","description":"Advanced NLP techniques using deep learning models."},
+  {"id":6,"title":"Computer Vision Basics","category":"cv","description":"Introduction to image processing and computer vision algorithms."},
+  {"id":7,"title":"Cybersecurity Fundamentals","category":"cyber","description":"Learn about network security, cryptography, and ethical hacking."},
+  {"id":8,"title":"Full Stack Web Development","category":"web","description":"Complete web development course covering frontend and backend technologies."},
+  {"id":67,"title":"Sustainable Agriculture","category":"agriculture","description":"Sustainable farming practices and environmental stewardship."},
+  {"id":68,"title":"Crop Production and Management","category":"agriculture","description":"Principles of crop science and agronomy."},
+  {"id":34,"title":"Introduction to International Law","category":"law","description":"Foundations of international law: sources, subjects, and key principles."},
+  {"id":42,"title":"Introduction to Business Management","category":"business","description":"Core business functions: strategy, operations, marketing, and finance."},
+  {"id":52,"title":"Foundations of Teaching for Learning","category":"education","description":"Introduction to teaching and learning: planning, assessment, and classroom management."}
+]

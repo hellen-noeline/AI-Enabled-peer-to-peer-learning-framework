@@ -67,7 +67,7 @@ function AdminQuizGenerate() {
       <div className="admin-dashboard-content">
         <div className="admin-dashboard-header">
           <h1>AI Quiz Generator</h1>
-          <p>Generate a full learning field (3 quizzes + final test) using OpenAI. It is saved automatically and will appear on the frontend (Resources, Quiz hub) right away—no manual copy-paste.</p>
+          <p>Generate a full learning field (3 quizzes + final test) using local AI (KeyBERT + T5). Text preprocessing, keyword extraction, and question generation run on your machine—no API key needed. Saved automatically; appears on Resources and Quiz hub.</p>
         </div>
 
         <form onSubmit={handleGenerate} style={{ maxWidth: '480px', marginBottom: '1.5rem' }}>
@@ -115,7 +115,7 @@ function AdminQuizGenerate() {
           </div>
           {error && <p style={{ color: '#ef4444', marginBottom: '0.5rem' }}>{error}</p>}
           <button type="submit" disabled={loading} style={{ padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer' }}>
-            {loading ? 'Generating… (can take 1–2 min)' : 'Generate full field'}
+            {loading ? 'Generating… (KeyBERT + T5, first run may download models)' : 'Generate full field'}
           </button>
         </form>
 
@@ -138,7 +138,7 @@ function AdminQuizGenerate() {
         )}
 
         <p style={{ marginTop: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>
-          Requires <code>OPENAI_API_KEY</code> in <code>server/.env</code>. Same key as the chat LLM. Generation uses tokens and may incur cost.
+          Requires Python backend running: <code>cd backend && python app.py</code>. Uses KeyBERT (BERT) for keyword extraction and T5 for question generation. No API key or cost.
         </p>
       </div>
     </div>
